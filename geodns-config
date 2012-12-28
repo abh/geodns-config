@@ -1,0 +1,60 @@
+#!/usr/bin/env perl
+use Mojolicious::Lite;
+use v5.12.0;
+use Data::Dump qw(pp);
+use lib 'lib';
+use DnsConfig;
+use GeoConfig;
+
+my $config = GeoConfig->new('config_path' => 'config');
+my $dns = $config->dns;
+
+
+my $i = 0;
+Mojo::IOLoop->recurring(
+    2 => sub {
+        $i++;
+        $config->refresh;
+        if ($config->dirty) {
+            say "Dirty";
+            $dns->setup_data;
+            say "DNS: ", pp($dns->dns);
+            $dns->write_dns("dns/g.develooper.org.json");
+        }
+    }
+);
+
+Mojo::IOLoop->singleton->reactor->on(
+    error => sub {
+        my ($reactor, $err) = @_;
+        app->log->error($err);
+    }
+);
+
+get '/' => sub {
+    my $self = shift;
+    $self->render('index', config => $config);
+};
+
+get '/status' => sub {
+    my $self = shift;
+    $self->render(text => "About $i seconds running!\nDirty:" . $config->dirty);
+};
+
+
+app->start;
+__DATA__
+
+@@ index.html.ep
+% layout 'default';
+% title 'Welcome';
+Welcome to the Mojolicious real-time web framework!
+
+<p>Dirty: <%= config->dirty %> </p>
+
+@@ layouts/default.html.ep
+<!DOCTYPE html>
+<html>
+  <head><title><%= title %></title></head>
+  <body><%= content %></body>
+</html>
