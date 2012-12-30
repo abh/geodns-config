@@ -1,0 +1,16 @@
+html,
+body {
+  margin: 10px;
+  margin-top: 20px;
+}
+
+table > caption {
+  text-align: left;
+  font-weight: bolder;
+  font-size: 120%;
+  padding-left: 4px;
+}
+
+tbody > tr > td.domain-type {
+  text-transform: lowercase;
+}

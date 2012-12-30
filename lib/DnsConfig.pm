@@ -8,6 +8,8 @@ use File::Slurp qw(read_file write_file);
 
 my $json = JSON->new->canonical;
 
+sub log { shift->config->log(@_) }
+
 has 'dns' => (
     isa     => 'HashRef',
     is      => 'rw',
@@ -50,17 +52,17 @@ sub _setup_geo_rules {
     for my $pop (@pops) {
         my $geos = $self->config->geoconfig->{$pop};
         if (!$geos) {
-            warn "$pop not configured in geo.json";
+            $self->log->warn("$pop not configured in geo.json");
             next;
         }
         for my $geo (@$geos) {
             my $pop_ip = $self->config->pops->{$pop} || $ips{$pop};
             unless ($pop_ip) {
-                warn "Unknown pop [$pop]";
+                $self->log->warn("Unknown pop [$pop]");
                 next;
             }
             if ($self->config->outages->{$pop_ip}) {
-                say "$pop ($pop_ip) has a current outage";
+                $self->log->info("$pop ($pop_ip) has a current outage");
                 next;
             }
 
@@ -90,7 +92,7 @@ sub add_geo_rules {
 sub setup_groups {
     my $self = shift;
     while (my ($group_name, $group_data) = each %{$self->config->groups}) {
-        say $group_name;
+        $self->log->debug("Configuring group $group_name");
         my $dns_name = "_" . $group_name;
         $self->add_geo_rules($dns_name, $group_data);
     }

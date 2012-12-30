@@ -1,0 +1,15 @@
+<table class="table table-striped table-hover table-condensed">
+<caption>Groups</caption>
+<thead>
+	<tr>
+		<th>Name</th>
+		<th>POPs</th>
+	</tr>
+</thead>
+<tbody>
+	<tr ng-repeat="group in groups">
+		<td>{{group.name}}</td>
+		<td>{{group.pops | json}}</td>
+	</tr>
+</tbody>
+</table>

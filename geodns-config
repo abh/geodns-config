@@ -9,16 +9,29 @@ use GeoConfig;
 my $config = GeoConfig->new('config_path' => 'config');
 my $dns = $config->dns;
 
+app->log->info("App starting");
+
+my $log_buffer_dirty = 0;
+my @log_buffer;
+app->log->on(
+    message => sub {
+        my ($log, $level, @lines) = @_;
+        push @log_buffer, scalar gmtime() . " [$level] " . join "\n", @lines;
+        $log_buffer_dirty++;
+    }
+);
 
 my $i = 0;
 Mojo::IOLoop->recurring(
     2 => sub {
         $i++;
+        #app->log->debug("i: $i");
         $config->refresh;
         if ($config->dirty) {
-            say "Dirty";
+            app->log->info("Data updated, reloading");
             $dns->setup_data;
             say "DNS: ", pp($dns->dns);
+            app->log->info("Updating DNS data file");
             $dns->write_dns("dns/g.develooper.org.json");
         }
     }
@@ -33,28 +46,83 @@ Mojo::IOLoop->singleton->reactor->on(
 
 get '/' => sub {
     my $self = shift;
-    $self->render('index', config => $config);
+    $self->stash(config => $config);
+    #$self->app->log->warn("PATHS: " . join(", ", @{ $self->app->renderer->paths }));
+    $self->render('index');
 };
 
-get '/status' => sub {
+get '/log' => sub {
     my $self = shift;
-    $self->render(text => "About $i seconds running!\nDirty:" . $config->dirty);
+    $self->stash(log_buffer => \@log_buffer);
+    $self->render('log');
+};
+
+get '/api/pops' => sub {
+    my $self = shift;
+    my $pops = $config->pops;
+    my @pops = map { { name => $_, ip => $pops->{$_} } } sort keys %$pops;
+    $self->render(json => \@pops);
+};
+
+get '/api/groups' => sub {
+    my $self = shift;
+    my $groups = $config->groups;
+    my @groups = map { { name => $_, pops => $groups->{$_} } } sort keys %$groups;
+    $self->render(json => \@groups);
+};
+
+
+get '/api/events' => sub {
+    my $self = shift;
+
+    # Increase inactivity timeout for connection a bit
+    Mojo::IOLoop->stream($self->tx->connection)->timeout(300);
+
+    # Change content type
+    $self->res->headers->content_type('text/event-stream');
+
+    my $json = Mojo::JSON->new;
+
+    # Subscribe to "message" event and forward "log" events to browser
+    my $cb = $self->app->log->on(
+        message => sub {
+            my ($log, $level, @lines) = @_;
+            my $data = $json->encode({ level => $level, lines => join("\n", @lines) });
+            #say "DATA[$data]";
+            #say "LEVEL: $level";
+            #say "LINES: ", @lines;
+            $self->write("event:log\ndata: $data\n\n");
+        }
+    );
+
+    # Unsubscribe from "message" event again once we are done
+    $self->on(
+        finish => sub {
+            my $self = shift;
+            $self->app->log->unsubscribe(message => $cb);
+        }
+    );
 };
 
 
 app->start;
+
 __DATA__
 
 @@ index.html.ep
 % layout 'default';
 % title 'Welcome';
-Welcome to the Mojolicious real-time web framework!
 
-<p>Dirty: <%= config->dirty %> </p>
+<div ng-app="geodns">
+    <div ng-view></div>
+</div>
 
-@@ layouts/default.html.ep
-<!DOCTYPE html>
-<html>
-  <head><title><%= title %></title></head>
-  <body><%= content %></body>
-</html>
+@@ log.html.ep
+% layout 'default';
+% title 'GeoDNS Config Log';
+
+<div id="events">
+<% for my $data (reverse @$log_buffer) { %>
+    <%= $data %><br>
+<% } %>
+</div>

@@ -1,5 +1,6 @@
 package GeoConfig::Config;
 use Moose;
+extends 'GeoConfig::Log';
 use Data::Dump qw(pp);
 use JSON qw(decode_json encode_json);
 use File::Slurp qw(read_file write_file);
@@ -103,7 +104,7 @@ sub _refresh_data {
 
     my $mtime = (stat($filepath))[9];
     unless (defined $mtime) {
-        warn "Could not read $filepath";
+        $self->log->warn("Could not read $filepath");
         return {};
     }
 
@@ -122,7 +123,7 @@ sub _refresh_data {
 sub _read_json_safely {
     my ($self, $filename, $data) = @_;
 
-    my $new = _read_json($filename);
+    my $new = $self->_read_json($filename);
     if ($new) {
         return $new;
     }
@@ -132,9 +133,10 @@ sub _read_json_safely {
 }
 
 sub _read_json {
+    my $self = shift;
     my $filename = shift;
     my $data = eval { decode_json(read_file($filename)) };
-    warn "Error reading $filename: $@" if $@;
+    $self->log->warn("Error reading $filename: $@") if $@;
     return $data;
 }
 
