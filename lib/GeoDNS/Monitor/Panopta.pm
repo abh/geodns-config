@@ -96,6 +96,7 @@ sub start {
 
 sub load_servers {
     my $self = shift;
+    $self->mojo->log->info("Refreshing Panopta server list");
     $self->_r(
         "config",
         "listServers",
@@ -110,6 +111,7 @@ sub load_servers {
 
 sub load_outages {
     my $self = shift;
+    $self->mojo->log->info("Refreshing Panopta outages");
     $self->_r(
         "status",
         "getCurrentOutages",
