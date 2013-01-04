@@ -93,7 +93,14 @@ get '/log' => sub {
 get '/api/pops' => sub {
     my $self = shift;
     my $pops = $config->pops;
-    my @pops = map { {name => $_, ip => $pops->{$_}} } sort keys %$pops;
+    my $ips  = $monitors{panopta}->ips;
+    my @pops = map {
+        my $ip = $pops->{$_};
+        {   name     => $_,
+            ip       => $ip,
+            monitors => ($ips->{$ip} || [])
+        }
+    } sort keys %$pops;
     $self->render(json => \@pops);
 };
 
@@ -113,28 +120,29 @@ get '/api/labels' => sub {
 
 get '/api/monitor' => sub {
     my $self = shift;
-    $self->render(json => { monitor => [ sort keys %monitors ] });
+    $self->render(json => {monitor => [sort keys %monitors]});
 };
 
 get '/api/monitor/:monitor/status' => sub {
-    my $self   = shift;
+    my $self         = shift;
     my $monitor_name = $self->stash('monitor');
-    my $monitor = $monitors{$monitor_name};
+    my $monitor      = $monitors{$monitor_name};
     unless ($monitor) {
         app->log->warn("Unknown monitor name :monitor $monitor_name");
         $self->render(json => {});
     }
-    $self->render(json => { outages => $monitor->outages });
+    $self->render(json => {outages => $monitor->outages});
 };
 
 get '/api/monitor/:monitor/servers' => sub {
-    my $self   = shift;
+    my $self         = shift;
     my $monitor_name = $self->stash('monitor');
-    my $monitor = $monitors{$monitor_name};
+    my $monitor      = $monitors{$monitor_name};
     unless ($monitor) {
         app->log->warn("Unknown monitor name :monitor $monitor_name");
         $self->render(json => {});
     }
+
     #$self->render(json => { servers => $monitor->ips });
     $self->render(json => $monitor->servers);
 };

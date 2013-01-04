@@ -1,0 +1,15 @@
+<table class="table table-striped table-hover table-condensed">
+<caption>Labels</caption>
+<thead>
+    <tr>
+        <th>Name</th>
+        <th>Config</th>
+    </tr>
+</thead>
+<tbody>
+    <tr ng-repeat="label in labels">
+        <td>{{label.name}}</td>
+        <td>{{label.config | json}}</td>
+    </tr>
+</tbody>
+</table>

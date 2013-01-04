@@ -34,14 +34,14 @@ sub _build_ua {
 }
 
 has servers => (
-    isa => 'HashRef',
-    is  => 'rw',
+    isa     => 'HashRef',
+    is      => 'rw',
     default => sub { {} }
 );
 
 has outages_list => (
-    isa => 'HashRef',
-    is  => 'rw',
+    isa     => 'HashRef',
+    is      => 'rw',
     default => sub { {} }
 );
 
@@ -53,12 +53,10 @@ sub _r {
     }
     $args ||= {};
 
-    my $url ="https://api.panopta.com/$section/$operation";
+    my $url = "https://api.panopta.com/$section/$operation";
 
-    #$url = "http://www.yellowbot.com/api/test/echo";
+    $self->mojo->log->debug("Panopta URL: ", $url);
 
-    $self->mojo->log->debug("URL: ", $url);
-    
     my $r = $self->ua->post_form(
         $url,
         {   username => $self->username,
@@ -67,10 +65,12 @@ sub _r {
         },
         sub {
             my ($ua, $tx) = @_;
+
             #pp($tx->res);
             #pp($tx->res->content->headers);
-            say "BODY: ",$tx->res->body;
+            say "BODY: ", $tx->res->body;
             my $data = decode_json($tx->res->body);
+
             #say "DATA: ", pp($data);
             $cb->($data) if $cb;
         }
@@ -79,7 +79,7 @@ sub _r {
 }
 
 sub start {
-    my $self= shift;
+    my $self = shift;
     $self->mojo->log->info("Starting panopta ...");
     $self->load_servers;
     Mojo::IOLoop->recurring(
@@ -121,18 +121,34 @@ sub load_outages {
     );
 }
 
-sub ip {
-
+sub check {
+    my ($self, $id) = @_;
+    my $servers = $self->servers;
+    return $servers->{$id} || {};
 }
 
 sub ips {
-    my $self = shift;
+    my $self    = shift;
     my $servers = $self->servers;
+    my $outages = $self->outages;
+    my %ips;
+    for my $server_id (sort keys %$servers) {
+        my $ip = $servers->{$server_id}->{last_known_ip};
+        if (!$ips{$ip}) {
+            $ips{$ip} = [];
+        }
+        push @{$ips{$ip}},
+          { id    => $server_id,
+            name  => ($servers->{$server_id}->{name} || ''),
+            alert => ($outages->{$server_id} ? 1 : 0)
+          };
+    }
+    return \%ips;
 }
 
 sub outages {
-    my $self = shift;
-    my $list = $self->outages_list;
+    my $self    = shift;
+    my $list    = $self->outages_list;
     my $servers = $self->servers;
     my %outages;
     for my $server_id (sort keys %$list) {

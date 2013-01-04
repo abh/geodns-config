@@ -1,0 +1,15 @@
+<table class="table table-striped table-hover table-condensed">
+<caption>Outages</caption>
+<thead>
+    <tr>
+        <th>Name</th>
+        <th>IP</th>
+    </tr>
+</thead>
+<tbody>
+    <tr ng-repeat="outage in outages">
+        <td>{{outage.name}}</td>
+        <td>{{outage.ip}}</td>
+    </tr>
+</tbody>
+</table>

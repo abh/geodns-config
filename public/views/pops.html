@@ -4,12 +4,22 @@
     <tr>
         <th>Name</th>
         <th>IP</th>
+
     </tr>
 </thead>
 <tbody>
     <tr ng-repeat="pop in pops">
         <td>{{pop.name}}</td>
         <td>{{pop.ip}}</td>
+        <td>
+            <span ng-repeat="mon in pop.monitors">
+                <button class="btn btn-mini"
+                    ng-class="{'btn-danger': mon.alert,
+                               'btn-success': mon.alert==0}"
+                    >
+                    {{mon.name}} ({{mon.id}})
+                </button>
+            </span>
     </tr>
 </tbody>
 </table>

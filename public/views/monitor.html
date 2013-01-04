@@ -1,0 +1,24 @@
+<br>
+<pre>
+{{monitor_list|json}}
+</pre>
+
+<table class="table table-striped table-hover table-condensed">
+<caption>Outages</caption>
+<thead>
+    <tr>
+        <th>IP</th>
+        <th>Data</th>
+    </tr>
+</thead>
+<tbody>
+    <tr ng-repeat="(ip, data) in state.panopta.outages">
+        <td>{{ip}}</td>
+        <td>{{data | json}}</td>
+    </tr>
+</tbody>
+</table>
+
+<pre>
+{{state.panopta.outages | json}}
+</pre>
