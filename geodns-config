@@ -6,6 +6,32 @@ use lib 'lib';
 use DnsConfig;
 use GeoConfig;
 
+plugin 'Config' => {default => {monitors => [], secret => ''}};
+
+if (app->config->{secret}) {
+    app->secret(app->config->{secret});
+}
+
+my %monitors;
+
+my $loader = Mojo::Loader->new;
+for my $module (@{$loader->search('GeoDNS::Monitor')}) {
+
+    my $monitor = $module;
+    $monitor =~ s/^GeoDNS::Monitor:://;
+
+    next unless grep { lc $monitor eq lc $_ } @{app->config->{monitors}};
+
+    app->log->info("Loading monitor $monitor");
+
+    my $e = $loader->load($module);
+    warn qq{Loading "$module" failed: $e} and next if ref $e;
+
+    my %args = %{app->config->{lc $monitor}};
+    $monitors{lc $monitor} = $module->new(%args, mojo => app);
+
+}
+
 my $config = GeoConfig->new('config_path' => 'config');
 my $dns = $config->dns;
 
@@ -21,16 +47,22 @@ app->log->on(
     }
 );
 
+for my $monitor (keys %monitors) {
+    $monitors{$monitor}->start();
+}
+
 my $i = 0;
 Mojo::IOLoop->recurring(
     2 => sub {
         $i++;
+
         #app->log->debug("i: $i");
         $config->refresh;
         if ($config->dirty) {
             app->log->info("Data updated, reloading");
             $dns->setup_data;
-            say "DNS: ", pp($dns->dns);
+
+            #say "DNS: ", pp($dns->dns);
             app->log->info("Updating DNS data file");
             $dns->write_dns("dns/g.develooper.org.json");
         }
@@ -47,6 +79,7 @@ Mojo::IOLoop->singleton->reactor->on(
 get '/' => sub {
     my $self = shift;
     $self->stash(config => $config);
+
     #$self->app->log->warn("PATHS: " . join(", ", @{ $self->app->renderer->paths }));
     $self->render('index');
 };
@@ -60,17 +93,51 @@ get '/log' => sub {
 get '/api/pops' => sub {
     my $self = shift;
     my $pops = $config->pops;
-    my @pops = map { { name => $_, ip => $pops->{$_} } } sort keys %$pops;
+    my @pops = map { {name => $_, ip => $pops->{$_}} } sort keys %$pops;
     $self->render(json => \@pops);
 };
 
 get '/api/groups' => sub {
-    my $self = shift;
+    my $self   = shift;
     my $groups = $config->groups;
-    my @groups = map { { name => $_, pops => $groups->{$_} } } sort keys %$groups;
+    my @groups = map { {name => $_, pops => $groups->{$_}} } sort keys %$groups;
     $self->render(json => \@groups);
 };
 
+get '/api/labels' => sub {
+    my $self   = shift;
+    my $labels = $config->labels;
+    my @labels = map { {name => $_, config => $labels->{$_}} } sort keys %$labels;
+    $self->render(json => \@labels);
+};
+
+get '/api/monitor' => sub {
+    my $self = shift;
+    $self->render(json => { monitor => [ sort keys %monitors ] });
+};
+
+get '/api/monitor/:monitor/status' => sub {
+    my $self   = shift;
+    my $monitor_name = $self->stash('monitor');
+    my $monitor = $monitors{$monitor_name};
+    unless ($monitor) {
+        app->log->warn("Unknown monitor name :monitor $monitor_name");
+        $self->render(json => {});
+    }
+    $self->render(json => { outages => $monitor->outages });
+};
+
+get '/api/monitor/:monitor/servers' => sub {
+    my $self   = shift;
+    my $monitor_name = $self->stash('monitor');
+    my $monitor = $monitors{$monitor_name};
+    unless ($monitor) {
+        app->log->warn("Unknown monitor name :monitor $monitor_name");
+        $self->render(json => {});
+    }
+    #$self->render(json => { servers => $monitor->ips });
+    $self->render(json => $monitor->servers);
+};
 
 get '/api/events' => sub {
     my $self = shift;
@@ -81,13 +148,17 @@ get '/api/events' => sub {
     # Change content type
     $self->res->headers->content_type('text/event-stream');
 
+    # make sure Mojo knows it doesn't have to render a page
+    $self->write("event: start\ndata: 1\n\n");
+
     my $json = Mojo::JSON->new;
 
     # Subscribe to "message" event and forward "log" events to browser
     my $cb = $self->app->log->on(
         message => sub {
             my ($log, $level, @lines) = @_;
-            my $data = $json->encode({ level => $level, lines => join("\n", @lines) });
+            my $data = $json->encode({level => $level, lines => join("\n", @lines)});
+
             #say "DATA[$data]";
             #say "LEVEL: $level";
             #say "LINES: ", @lines;

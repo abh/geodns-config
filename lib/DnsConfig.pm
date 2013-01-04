@@ -125,7 +125,7 @@ sub setup_labels {
 
 sub setup_data {
     my $self = shift;
-    say "setting up data:", pp($self->config->labels);
+    #say "setting up data:", pp($self->config->labels);
     $self->dns(_base_data());
     $self->setup_groups;
     $self->setup_labels;
@@ -134,7 +134,7 @@ sub setup_data {
 sub write_dns {
     my ($self, $file) = @_;
     my $dns_config = $self->dns;
-    pp($dns_config);
+    #pp($dns_config);
     $self->config->dirty(0);
     write_file($file, $json->encode($dns_config));
 }

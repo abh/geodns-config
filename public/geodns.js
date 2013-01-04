@@ -2,63 +2,86 @@
 
 (function($) {
 
-   console.log("loading js");
+    console.log("loading js");
 
-   if ($('#events')) {
-       var events = new EventSource('/api/events');
+    if ($('#events')) {
+        var events = new EventSource('/api/events');
 
-       // Subscribe to "log" event
-       var content = $('#events');
-       events.addEventListener('log',
-           function(event) {
-               console.log("got event", event, event.data);
-               var data = JSON.parse(event.data);
-               console.log("json data", data);
-
-               if (data.level !== 'debug') {
-                   var type = "info";
-                   if (data.level === 'warn') {
-                       type = "warning";
-                   }
-                   else if (data.level === 'error' || data.level === 'fatal') {
-                       type = "danger";
-                   }
-
-                   $('.top-right').notify(
-                       {
-                           message: { text: data.lines },
-                           type: type
-                       }).show();
-               }
-
-               var html = '[<span class="event-' + data.level + '">' +
-                   data.level + '</span>] ' +
-                   data.lines + '<br>';
-               content.prepend(html);
-           }, false
+        // Subscribe to "log" event
+        var content = $('#events');
+        events.addEventListener('log',
+            function(event) {
+                // console.log("got event", event, event.data);
+                var data = JSON.parse(event.data);
+                // console.log("json data", data);
+ 
+                if (data.level !== 'debug') {
+                    var type = "info";
+                    if (data.level === 'warn') {
+                        type = "warning";
+                    }
+                    else if (data.level === 'error' || data.level === 'fatal') {
+                        type = "danger";
+                    }
+ 
+                    $('.top-right').notify(
+                        {
+                            message: { text: data.lines },
+                            type: type
+                        }).show();
+                }
+ 
+                var html = '[<span class="event-' + data.level + '">' +
+                    data.level + '</span>] ' +
+                    data.lines + '<br>';
+                content.prepend(html);
+            }, false
        );
-   }
+    }
 
 })(jQuery);
 
-var configList = ['Pops','Groups','Labels','Outages'];
+var configList = ['Pops','Groups','Labels','Monitor','MonitorStatus'];
+
+var controllers = {
+    "Pops":    PopsCtrl,
+    "Groups":  GroupsCtrl,
+    "Labels":  LabelsCtrl,
+    "Monitor": MonitorCtrl
+};
 
 var App = angular.module('geodns', ['geodnsServices', 'buttonsRadio']).
     config(['$routeProvider', function($routeProvider) {
-        $routeProvider.
-            when('/pops',   {templateUrl: 'views/pops.html',   controller: PopsCtrl}).
-            when('/groups', {templateUrl: 'views/groups.html', controller: GroupsCtrl}).
-            otherwise({redirectTo: '/pops'});
+        _.each(configList, function(t) {
+            if (!controllers[t]) { return; }
+            var api_name = t.toLowerCase();
+            $routeProvider.when('/' + api_name,
+                {
+                    templateUrl: 'views/' + api_name + '.html',
+                    controller: controllers[t]
+                }
+            )
+        });
+        $routeProvider.otherwise({redirectTo: '/pops'});
     }]);
 
 var services = angular.module('geodnsServices', ['ngResource']);
 
 _.each(configList, function(t) {
-    services.factory(t, function($resource) {
-        var api_name = t.toLowerCase();
-        var r = $resource('/api/' + api_name, {});
-        return r;
-    });
+    if (t === 'MonitorStatus') {
+        services.factory(t, function($resource) {
+            return $resource('/api/monitor/:monitor/status',
+                {monitor: '@monitor'}, {
+            });
+        });
+    }
+    else {
+        services.factory(t, function($resource) {
+            var api_name = t.toLowerCase();
+            var r = $resource('/api/' + api_name, {});
+            return r;
+        });
+    }
 });
 
 angular.module('buttonsRadio', []).directive('buttonsRadio', function() {
@@ -86,4 +109,41 @@ function PopsCtrl($scope, Pops) {
 
 function GroupsCtrl($scope, Groups) {
     $scope.groups = Groups.query();
+}
+
+function MonitorCtrl($scope, Monitor, MonitorStatus) {
+    console.log("monitors");
+    $scope.monitor_list = Monitor.get({}, function(m) {
+        console.log("got monitor", m);
+        $scope.state = {};
+        _.each(m.monitor, function(mon) {
+            var mon = m.monitor[0];
+            console.log("getting status for", mon);
+            $scope.state[mon] = MonitorStatus.get({ monitor: mon },
+                function(state) {
+                    console.log("got state", state);
+                }
+            );
+            // $scope.xstate = $scope.state[m];
+        });
+    });
+
+    // console.log("setup watcher");
+   /* $scope.$watch("list",
+    function(value) {
+        console.log("watching", value);
+        if (value && value.length > 0) {
+            console.log("setting monitor1");
+            $scope.monitor1 = $scope.list.monitors[0];
+            $scope.state = Monitors.query();
+        }
+    }, true);
+
+    setTimeout(function() {console.log("MONINT", $scope.monitor);}, 500);
+    */
+    // $scope.outages = Outages.query();
+}
+
+function LabelsCtrl($scope, Labels) {
+    $scope.labels = Labels.query();
 }
