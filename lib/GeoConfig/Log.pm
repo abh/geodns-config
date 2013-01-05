@@ -1,6 +1,7 @@
 package GeoConfig::Log;
 use v5.12.0;
 use Moose;
+use Mojo::Log;
 
 has 'log_level' => (
   isa => 'Str',
