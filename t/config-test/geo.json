@@ -1,6 +1,6 @@
 {
-  "any1": ["@"],
-  "any2": ["@"],
-  "sin1": ["asia"],
-  "sin2": ["sg","cn","th","my","id"]
+  "edge1.any": ["@"],
+  "edge2.any": ["@"],
+  "flex1.sin": ["asia"],
+  "flex2.sin": ["sg","cn","th","my","id"]
 }

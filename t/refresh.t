@@ -9,7 +9,7 @@ ok($g->refresh,         'refresh');
 ok($g->dns->setup_data, 'setup data');
 ok($g->dns->dns->{data}->{"_edge1-global"}, "has data setup");
 Data::Dump::pp($g->dns->dns);
-is($g->pops->{any1}, '10.1.1.1', 'any1 pop');
+is($g->pops->{"edge1.any"}, '10.1.1.1', 'any1 pop');
 
 my $labels_file = "t/config-test/labels.json";
 

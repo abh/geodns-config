@@ -6,12 +6,12 @@ ok(my $d = $g->dns, 'dnsconfig');
 
 is_deeply($d->_setup_geo_rules("foo", {}), {}, "geo rules empty");
 is_deeply(
-    $d->_setup_geo_rules("foo", {'any1' => ''}),
+    $d->_setup_geo_rules("foo", {'edge1.any' => ''}),
     {'foo' => {a => [['10.1.1.1']]}},
     "geo rules simple"
 );
 is_deeply(
-    $d->_setup_geo_rules("foo", {'any1' => '', 'sin1' => '10.20.1.10'}),
+    $d->_setup_geo_rules("foo", {'edge1.any' => '', 'flex1.sin' => '10.20.1.10'}),
     {   'foo'      => {a => [['10.1.1.1']]},
         'foo.asia' => {a => [['10.20.1.10']]}
     },
@@ -25,7 +25,7 @@ ok($d->setup_labels, 'setup labels');
 is_deeply($d->dns->{data}->{"zone1.example"}, {alias => '_edge1-global'}, "label alias");
 is_deeply($d->dns->{data}->{"zone2.example.asia"}, {a => [["10.20.1.10"]]}, "label override");
 
-$g->pops->{sin1} = "10.20.1.101";
+$g->pops->{"flex1.sin"} = "10.20.1.101";
 ok($d->setup_data, 'setup data again');
 is_deeply($d->dns->{data}->{"_edge1-global.asia"}, {a => [["10.20.1.101"]]}, "new sin1 IP");
 
