@@ -16,4 +16,29 @@ sub _build_dns {
     return DnsConfig->new(config => $self);
 }
 
+sub pop_geo {
+    my $self = shift;
+    my $pop = shift;
+    my $geoconfig = $self->geoconfig;
+    if (my $geo = $geoconfig->{$pop}) {
+        return $geo;
+    }
+    my @wc = map {
+        my $r   = $_;
+        my $geo = $geoconfig->{$r};
+        $r =~ s/\./\\./g;
+        $r =~ s/\*/[^\.]+/g;
+        my $re = qr/^$r$/;
+        [$re => $geo]
+    } grep { m/^\*/ or m/\.\*/ } keys %$geoconfig;
+
+    for my $rule (@wc) {
+        if ($pop =~ $rule->[0]) {
+            return $rule->[1];
+        }
+    }
+
+    return [];
+}
+
 1;

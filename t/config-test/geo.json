@@ -2,5 +2,6 @@
   "edge1.any": ["@"],
   "edge2.any": ["@"],
   "flex1.sin": ["asia"],
-  "flex2.sin": ["sg","cn","th","my","id"]
+  "flex2.sin": ["sg","cn","th","my","id"],
+  "*.ams":     ["nl","europe"]
 }

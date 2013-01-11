@@ -9,4 +9,7 @@ is($pops->{"edge1.any"}, '10.1.1.1', 'any1 pop');
 ok($g->refresh, 'refresh data');
 is($g->pops->{"edge1.any"}, '10.1.1.1', 'any1 pop still there');
 
+is_deeply($g->pop_geo('flex1.sin'), ['asia'], 'simple pop_geo(flex1.sin)');
+is_deeply($g->pop_geo('edge1.ams'), ['nl','europe'], 'wildcard pop_geo(edge1.ams)');
+
 done_testing();

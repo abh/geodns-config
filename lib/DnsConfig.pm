@@ -50,7 +50,7 @@ sub _setup_geo_rules {
     }
 
     for my $pop (@pops) {
-        my $geos = $self->config->geoconfig->{$pop};
+        my $geos = $self->config->pop_geo($pop);
         if (!$geos) {
             $self->log->warn("$pop not configured in geo.json");
             next;
