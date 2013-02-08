@@ -51,6 +51,7 @@ sub _setup_geo_rules {
 
     for my $pop (@pops) {
         my $geos = $self->config->pop_geo($pop);
+
         if (!$geos) {
             $self->log->warn("$pop not configured in geo.json");
             next;
@@ -61,7 +62,7 @@ sub _setup_geo_rules {
                 $self->log->warn("Unknown pop [$pop]");
                 next;
             }
-            if ($self->config->outages->{$pop_ip}) {
+            if ($self->config->monitor && $self->config->monitor->outage($pop_ip)) {
                 $self->log->info("$pop ($pop_ip) has a current outage");
                 next;
             }
@@ -113,7 +114,7 @@ sub setup_labels {
                 warn "No group $alias configured";
                 next;
             }
-            warn "adding alias for $domain_name / $alias";
+            # warn "adding alias for $domain_name / $alias";
             $self->dns->{data}->{$domain_name}->{alias} = "_$alias";
         }
         else {

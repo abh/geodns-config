@@ -11,6 +11,13 @@ has 'dns' => (
     lazy_build => 1,
 );
 
+has 'monitor' => (
+    isa => 'GeoDNS::Monitor',
+    is => 'ro',
+    required => 0,
+
+);
+
 sub _build_dns {
     my $self = shift;
     return DnsConfig->new(config => $self);

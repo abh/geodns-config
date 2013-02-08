@@ -1,6 +1,7 @@
 package GeoDNS::Monitor::Panopta;
 use v5.12.0;
 use Moose;
+extends 'GeoDNS::Monitor';
 use Data::Dump qw(pp);
 use JSON qw(decode_json);
 
@@ -157,6 +158,12 @@ sub outages {
         $outages{$servers->{$server_id}->{last_known_ip}} = $list->{$server_id};
     }
     return \%outages;
+}
+
+sub outage {
+    my $self = shift;
+    my $ip = shift;
+    return $self->outages->{$ip} ? 1 : 0;
 }
 
 1;

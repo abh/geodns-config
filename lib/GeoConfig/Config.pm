@@ -65,25 +65,12 @@ sub refresh_geoconfig {
     return $self->_refresh_data('geoconfig', 'geo.json');
 }
 
-has 'outages' => (
-    isa        => 'HashRef',
-    is         => 'rw',
-    lazy_build => 1,
-    builder    => 'refresh_outages'
-);
-
-sub refresh_outages {
-    my $self = shift;
-    return $self->_refresh_data('outages', 'outages.json');
-}
-
 sub refresh {
     my $self = shift;
     $self->refresh_pops;
     $self->refresh_groups;
     $self->refresh_labels;
     $self->refresh_geoconfig;
-    $self->refresh_outages;
     return $self->dirty;
 }
 
