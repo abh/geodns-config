@@ -20,7 +20,7 @@
               <div class="nav-collapse">
                 <ul class="nav">
                     <li class="active"><a href="/">Home</a></li>
-                    <li><a href="/#/pops">Pops</a></li>
+                    <li><a href="/#/nodes">Nodes</a></li>
                     <li><a href="/#/groups">Groups</a></li>
                     <li><a href="/#/labels">Labels</a></li>
                     <li><a href="/#/monitor">Monitor</a></li>

@@ -1,5 +1,5 @@
 <table class="table table-striped table-hover table-condensed">
-<caption>POPs</caption>
+<caption>Nodes</caption>
 <thead>
     <tr>
         <th>Name</th>
@@ -8,11 +8,11 @@
     </tr>
 </thead>
 <tbody>
-    <tr ng-repeat="pop in pops">
-        <td>{{pop.name}}</td>
-        <td>{{pop.ip}}</td>
+    <tr ng-repeat="node in nodes">
+        <td>{{node.name}}</td>
+        <td>{{node.ip}}</td>
         <td>
-            <span ng-repeat="mon in pop.monitors">
+            <span ng-repeat="mon in node.monitors">
                 <button class="btn btn-mini"
                     ng-class="{'btn-danger': mon.alert,
                                'btn-success': mon.alert==0}"

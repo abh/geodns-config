@@ -3,6 +3,7 @@ use Test::More;
 use_ok('GeoConfig');
 use_ok('GeoDNS::Monitor::Manual');
 ok( my $g = GeoConfig->new(
+        domain_name => 'example.net',
         config_path => 't/config-test',
         monitor     => GeoDNS::Monitor::Manual->new
     ),

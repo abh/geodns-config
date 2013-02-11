@@ -56,7 +56,7 @@ sub _r {
 
     my $url = "https://api.panopta.com/$section/$operation";
 
-    $self->mojo->log->debug("Panopta URL: ", $url);
+    #$self->mojo->log->debug("Panopta URL: ", $url);
 
     my $r = $self->ua->post_form(
         $url,
@@ -69,7 +69,7 @@ sub _r {
 
             #pp($tx->res);
             #pp($tx->res->content->headers);
-            say "BODY: ", $tx->res->body;
+            #say "BODY: ", $tx->res->body;
             my $data = decode_json($tx->res->body);
 
             #say "DATA: ", pp($data);
@@ -105,7 +105,6 @@ sub load_servers {
         sub {
             my $data = shift;
             $self->servers({map { $_->{server_id} => $_ } @{$data->{servers}}});
-            $self->load_outages;
         }
     );
 }

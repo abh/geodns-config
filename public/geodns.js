@@ -14,7 +14,7 @@
                 // console.log("got event", event, event.data);
                 var data = JSON.parse(event.data);
                 // console.log("json data", data);
- 
+
                 if (data.level !== 'debug') {
                     var type = "info";
                     if (data.level === 'warn') {
@@ -23,14 +23,14 @@
                     else if (data.level === 'error' || data.level === 'fatal') {
                         type = "danger";
                     }
- 
+
                     $('.top-right').notify(
                         {
                             message: { text: data.lines },
                             type: type
                         }).show();
                 }
- 
+
                 var html = '[<span class="event-' + data.level + '">' +
                     data.level + '</span>] ' +
                     data.lines + '<br>';
@@ -41,10 +41,10 @@
 
 })(jQuery);
 
-var configList = ['Pops','Groups','Labels','Monitor','MonitorStatus'];
+var configList = ['Nodes','Groups','Labels','Monitor','MonitorStatus'];
 
 var controllers = {
-    "Pops":    PopsCtrl,
+    "Nodes":   NodesCtrl,
     "Groups":  GroupsCtrl,
     "Labels":  LabelsCtrl,
     "Monitor": MonitorCtrl
@@ -62,7 +62,7 @@ var App = angular.module('geodns', ['geodnsServices', 'buttonsRadio']).
                 }
             )
         });
-        $routeProvider.otherwise({redirectTo: '/pops'});
+        $routeProvider.otherwise({redirectTo: '/nodes'});
     }]);
 
 var services = angular.module('geodnsServices', ['ngResource']);
@@ -101,9 +101,9 @@ angular.module('buttonsRadio', []).directive('buttonsRadio', function() {
     };
 });
 
-function PopsCtrl($scope, Pops) {
-    $scope.pops = Pops.query();
-    console.log("Pops", $scope.pops);
+function NodesCtrl($scope, Nodes) {
+    $scope.nodes = Nodes.query();
+    console.log("Nodes", $scope.nodes);
     // $scope.orderProp = 'date';
 }
 

@@ -1,15 +1,7 @@
 package GeoConfig::Config;
 use Moose;
-extends 'GeoConfig::Log';
+with 'GeoDNS::JsonFile', 'GeoConfig::Log';
 use Data::Dump qw(pp);
-use JSON qw(decode_json encode_json);
-use File::Slurp qw(read_file write_file);
-
-has 'last_read_timestamp' => (
-    isa     => 'HashRef',
-    is      => 'rw',
-    default => sub { return {} }
-);
 
 has 'config_path' => (
     isa     => 'Str',
@@ -17,23 +9,14 @@ has 'config_path' => (
     default => 'config'
 );
 
-has 'pops' => (
-    isa        => 'HashRef',
-    is         => 'rw',
-    lazy_build => 1,
-    builder    => 'refresh_pops'
-);
-
-sub refresh_pops {
+sub BUILD {
     my $self = shift;
-    return $self->_refresh_data('pops', 'pops.json');
+    $self->refresh;
 }
 
 has 'groups' => (
     isa        => 'HashRef',
     is         => 'rw',
-    lazy_build => 1,
-    builder    => 'refresh_groups'
 );
 
 sub refresh_groups {
@@ -44,8 +27,6 @@ sub refresh_groups {
 has 'labels' => (
     isa        => 'HashRef',
     is         => 'rw',
-    lazy_build => 1,
-    builder    => 'refresh_labels'
 );
 
 sub refresh_labels {
@@ -56,8 +37,6 @@ sub refresh_labels {
 has 'geoconfig' => (
     isa        => 'HashRef',
     is         => 'rw',
-    lazy_build => 1,
-    builder    => 'refresh_geoconfig'
 );
 
 sub refresh_geoconfig {
@@ -65,66 +44,26 @@ sub refresh_geoconfig {
     return $self->_refresh_data('geoconfig', 'geo.json');
 }
 
+after 'dirty' => sub {
+    my $self = shift;
+
+    if (defined $_[0] && $_[0] == 0) {
+        $self->nodes->dirty(0);
+    }
+};
+
 sub refresh {
     my $self = shift;
-    $self->refresh_pops;
     $self->refresh_groups;
     $self->refresh_labels;
     $self->refresh_geoconfig;
-    return $self->dirty;
-}
-
-has 'dirty' => (
-    isa     => 'Bool',
-    is      => 'rw',
-    default => 0,
-);
-
-sub _refresh_data {
-    my $self = shift;
-    my ($name, $file) = @_;
-    my $current = $self->{$name} || {};
-
-    my $filepath = $self->config_path . '/' . $file;
-
-    #warn "Loading: $filepath";
-
-    my $mtime = (stat($filepath))[9];
-    unless (defined $mtime) {
-        $self->log->warn("Could not read $filepath");
-        return {};
-    }
-
-    if ($mtime > ($self->last_read_timestamp->{$name} || 0)) {
-        my $data = $self->_read_json_safely($filepath, $current);
-        $self->last_read_timestamp->{$name} = $mtime;
-        if ($current ne $data) {
-            $self->{$name} = $data;
-            $self->dirty(1);
+    $self->nodes->check;
+    if (!$self->dirty) {
+        if (my $dirty = $self->nodes->dirty) {
+            $self->dirty($dirty) if $dirty;
         }
-        return $data;
     }
-    return $current;
-}
-
-sub _read_json_safely {
-    my ($self, $filename, $data) = @_;
-
-    my $new = $self->_read_json($filename);
-    if ($new) {
-        return $new;
-    }
-
-    # keep old data
-    return $data;
-}
-
-sub _read_json {
-    my $self = shift;
-    my $filename = shift;
-    my $data = eval { decode_json(read_file($filename)) };
-    $self->log->warn("Error reading $filename: $@") if $@;
-    return $data;
+    return $self->dirty;
 }
 
 1;

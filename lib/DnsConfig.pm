@@ -37,10 +37,11 @@ sub _setup_geo_rules {
     my ($dns_name, $data) = (shift, shift);
     my $dns = {};
 
-    #say "geo: ", pp($geoconfig), " POPS: ", pp($pops), " DATA: ", pp($data);
-
     my @pops = ref $data eq 'ARRAY' ? @$data : keys %$data;
-    my %ips = %{$self->config->pops};
+
+    #Test::More::diag("geo: ", pp($dns_name), " POPS: ", pp(\@pops), " DATA: ", pp($data));
+
+    my %ips;
     if (ref $data eq 'HASH') {
         for my $pop (keys %$data) {
             if ($data->{$pop}) {
@@ -57,7 +58,7 @@ sub _setup_geo_rules {
             next;
         }
         for my $geo (@$geos) {
-            my $pop_ip = $self->config->pops->{$pop} || $ips{$pop};
+            my $pop_ip = $self->config->nodes->node_ip($pop) || $ips{$pop};
             unless ($pop_ip) {
                 $self->log->warn("Unknown pop [$pop]");
                 next;
@@ -72,7 +73,8 @@ sub _setup_geo_rules {
                 $geo_name .= ".$geo";
             }
             $dns->{$geo_name} ||= {a => []};
-            push @{$dns->{$geo_name}->{a}}, [$ips{$pop}];
+            my $ip =  $ips{$pop} || $self->config->nodes->node_ip($pop);
+            push @{$dns->{$geo_name}->{a}}, [$ip];
         }
     }
     unless ($dns->{$dns_name} && $dns->{$dns_name}->{a} && @{$dns->{$dns_name}->{a}}) {

@@ -32,7 +32,19 @@ for my $module (@{$loader->search('GeoDNS::Monitor')}) {
 
 }
 
-my $config = GeoConfig->new('config_path' => 'config');
+my $nodes;
+{
+    my $node_module = "GeoDNS::Nodes::" . app->config->{nodes}->{type};
+    my $e = $loader->load($node_module);
+    warn qq{Loading "$node_module" failed: $e} if ref $e;
+    $nodes = $node_module->new( app->config->{nodes}->{config} );
+}
+
+my $config = GeoConfig->new(
+    'config_path' => 'config',
+    nodes         => $nodes,
+    domain_name   => app->config->{domain_name}
+);
 my $dns = $config->dns;
 
 app->log->info("App starting");
@@ -90,18 +102,18 @@ get '/log' => sub {
     $self->render('log');
 };
 
-get '/api/pops' => sub {
+get '/api/nodes' => sub {
     my $self = shift;
-    my $pops = $config->pops;
+    my $nodes = $config->nodes->all;
     my $ips  = $monitors{panopta}->ips;
-    my @pops = map {
-        my $ip = $pops->{$_};
+    my @nodes = map {
+        my $ip = $nodes->{$_};
         {   name     => $_,
             ip       => $ip,
             monitors => ($ips->{$ip} || [])
         }
-    } sort keys %$pops;
-    $self->render(json => \@pops);
+    } sort keys %$nodes;
+    $self->render(json => \@nodes);
 };
 
 get '/api/groups' => sub {
