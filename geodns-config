@@ -5,6 +5,9 @@ use Data::Dump qw(pp);
 use lib 'lib';
 use DnsConfig;
 use GeoConfig;
+use GeoDNS::Log;
+
+app->log(GeoDNS::Log->singleton);
 
 plugin 'Config' => {default => {monitors => [], secret => ''}};
 

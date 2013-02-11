@@ -1,24 +1,12 @@
 package GeoConfig::Log;
 use v5.12.0;
 use Moose::Role;
-use Mojo::Log;
-
-has 'log_level' => (
-  isa => 'Str',
-  is => 'ro',
-  default  => 'debug'
-);
-
-has 'log_path' => (
-  isa => 'Str',
-  is => 'ro',
-  default  => 'STDERR'
-);
+use GeoDNS::Log;
 
 has 'log' => (
- isa => 'Mojo::Log',
- is  => 'ro', 
- default => sub { Mojo::Log->new(level => $_[0]->log_level, path => $_[0]->log_path) } 
-); 
+    isa     => 'Mojo::Log',
+    is      => 'ro',
+    default => sub { GeoDNS::Log->singleton }
+);
 
 1;
