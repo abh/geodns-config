@@ -34,11 +34,28 @@ has 'monitor' => (
 has 'nodes' => (
     isa     => 'GeoDNS::Nodes',
     is      => 'ro',
+    lazy    => 1,
     default => sub {
         my $self = shift;
         require GeoDNS::Nodes::File;
         return GeoDNS::Nodes::File->new(
-            name => join("/", $self->config_path, $self->domain_name . '.nodes'));
+            file => join("/", $self->config_path, $self->domain_name . '.nodes.json'),
+            name => $self->domain_name,
+        );
+    },
+);
+
+has 'labels' => (
+    isa     => 'GeoDNS::Labels',
+    is      => 'ro',
+    lazy    => 1,
+    default => sub {
+        my $self = shift;
+        require GeoDNS::Labels::File;
+        return GeoDNS::Labels::File->new(
+            file => join("/", $self->config_path, $self->domain_name . '.labels.json'),
+            name => $self->domain_name,
+        );
     },
 );
 

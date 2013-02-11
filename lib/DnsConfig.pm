@@ -105,7 +105,7 @@ sub setup_groups {
 sub setup_labels {
     my $self   = shift;
     my $groups = $self->config->groups;
-    while (my ($domain_name, $domain_data) = each %{$self->config->labels}) {
+    while (my ($domain_name, $domain_data) = each %{$self->config->labels->all}) {
         pp($domain_name, $domain_data);
         if ($self->dns->{data}->{$domain_name}) {
             warn "$domain_name configured twice (groups and domains?)";

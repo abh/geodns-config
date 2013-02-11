@@ -2,7 +2,7 @@ use Test::More;
 
 use_ok('GeoConfig');
 ok(my $g = GeoConfig->new(domain_name => 'example.net', config_path => 't/config-test'), "new");
-is($g->nodes->update, 1, 'update nodes');
+is($g->nodes->update, 0, 'update nodes - already up-to-date');
 ok($g->nodes->last_read_timestamp->{nodes}, 'last_read is not 0');
 is($g->nodes->node_ip("edge1.any"), '10.1.1.1', 'any1 pop');
 

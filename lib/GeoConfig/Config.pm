@@ -24,16 +24,6 @@ sub refresh_groups {
     return $self->_refresh_data('groups', 'groups.json');
 }
 
-has 'labels' => (
-    isa        => 'HashRef',
-    is         => 'rw',
-);
-
-sub refresh_labels {
-    my $self = shift;
-    return $self->_refresh_data('labels', 'labels.json');
-}
-
 has 'geoconfig' => (
     isa        => 'HashRef',
     is         => 'rw',
@@ -49,17 +39,18 @@ after 'dirty' => sub {
 
     if (defined $_[0] && $_[0] == 0) {
         $self->nodes->dirty(0);
+        $self->labels->dirty(0);
     }
 };
 
 sub refresh {
     my $self = shift;
     $self->refresh_groups;
-    $self->refresh_labels;
     $self->refresh_geoconfig;
     $self->nodes->check;
+    $self->labels->check;
     if (!$self->dirty) {
-        if (my $dirty = $self->nodes->dirty) {
+        if (my $dirty = $self->nodes->dirty || $self->labels->dirty) {
             $self->dirty($dirty) if $dirty;
         }
     }
