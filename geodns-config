@@ -35,19 +35,20 @@ for my $module (@{$loader->search('GeoDNS::Monitor')}) {
 
 }
 
-my $nodes;
-{
-    die "'nodes' configuration required" unless app->config->{nodes};
-    my ($type) = keys %{ app->config->{nodes} };
-    my $node_module = "GeoDNS::Nodes::$type";
-    my $e = $loader->load($node_module);
-    warn qq{Loading "$node_module" failed: $e} if ref $e;
-    $nodes = $node_module->new( %{ app->config->{nodes}->{$type} } );
+my %config;
+for my $type (qw(Nodes Labels)) {
+    my $lc_type = lc $type;
+    app->config->{$lc_type} or next;
+    my ($module) = keys %{ app->config->{nodes} };
+    my $module_name = "GeoDNS::${type}::${module}";
+    warn "NODE MODULE: $module_name";
+    my $e = $loader->load($module_name);
+    warn qq{Loading "$module_name" failed: $e} if ref $e;
+    $config{$lc_type} = $module_name->new( %{ app->config->{nodes}->{$module} } );
 }
-
 my $config = GeoConfig->new(
+    %config,
     'config_path' => 'config',
-    nodes         => $nodes,
     domain_name   => app->config->{domain_name}
 );
 my $dns = $config->dns;
@@ -135,7 +136,7 @@ get '/api/groups' => sub {
 
 get '/api/labels' => sub {
     my $self   = shift;
-    my $labels = $config->labels;
+    my $labels = $config->labels->all;
     my @labels = map { {name => $_, config => $labels->{$_}} } sort keys %$labels;
     $self->render(json => \@labels);
 };

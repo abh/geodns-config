@@ -50,8 +50,6 @@ sub _refresh_data {
 sub _read_json_safely {
     my ($self, $filename, $data) = @_;
 
-    warn "reading $filename";
-
     my $new = $self->_read_json($filename);
     if ($new) {
         return $new;
