@@ -17,7 +17,7 @@ sub update {
                 $self->{data}->{$node} = {ip => $self->{data}->{$node}, active => 1};
             }
         }
-        return 1;
+        return $self->ready(1);
     }
     return 0;
 }

@@ -76,7 +76,7 @@ Mojo::IOLoop->recurring(
         $config->refresh;
         if ($config->dirty) {
             if (!$config->ready) {
-                app->log->warn("Data not ready");
+                app->log->warn("Data not ready: ". join ", ", $config->not_ready);
                 return;
             }
             app->log->info("Data updated, reloading");

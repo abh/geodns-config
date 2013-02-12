@@ -64,6 +64,15 @@ sub ready {
     return $self->labels->ready && $self->nodes->ready;
 }
 
+sub not_ready {
+    my $self = shift;
+    my @not_ready;
+    for my $m (qw(labels nodes)) {
+        push @not_ready, $m unless $self->$m->ready;
+    }
+    return @not_ready;
+}
+
 sub pop_geo {
     my $self = shift;
     my $pop = shift;
