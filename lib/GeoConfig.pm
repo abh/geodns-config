@@ -59,6 +59,11 @@ has 'labels' => (
     },
 );
 
+sub ready {
+    my $self = shift;
+    return $self->labels->ready && $self->nodes->ready;
+}
+
 sub pop_geo {
     my $self = shift;
     my $pop = shift;

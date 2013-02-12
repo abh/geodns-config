@@ -9,26 +9,12 @@ has 'name' => (
     default => 'nodes',
 );
 
-has 'file' => (
-    isa     => 'Str',
-    is      => 'rw',
-    lazy    => 1,
-    default => sub { shift->name . '.json' },
-);
-
-sub check {
-
-    # run update if appropriate
-    my $self = shift;
-    return $self->update;
-}
-
 sub update {
     my $self = shift;
-    if ($self->_refresh_data('nodes', $self->file)) {
-        for my $node (keys %{$self->{nodes}}) {
-            unless (ref $self->{nodes}->{$node}) {
-                $self->{nodes}->{$node} = {ip => $self->{nodes}->{$node}, active => 1};
+    if ($self->_refresh_data('data', $self->file)) {
+        for my $node (keys %{$self->{data}}) {
+            unless (ref $self->{data}->{$node}) {
+                $self->{data}->{$node} = {ip => $self->{data}->{$node}, active => 1};
             }
         }
         return 1;
@@ -40,8 +26,8 @@ sub node_ip {
     my ($self, $node) = @_;
     $self->update();
 
-#Test::More::diag("Nodes, fetching '$node': " .$self->{nodes}->{$node} ." / ". Data::Dump::pp($self->{nodes}));
-    return $self->{nodes}->{$node}->{ip};
+    #Test::More::diag("Nodes, fetching '$node': " .$self->{data}->{$node} ." / ". Data::Dump::pp($self->{data}));
+    return $self->{data}->{$node}->{ip};
 }
 
 sub set_ip {
@@ -49,12 +35,12 @@ sub set_ip {
     unless (defined $ip) {
         $active = 1;
     }
-    return $self->{nodes}->{$node} = {ip => $ip, active => $active};
+    return $self->{data}->{$node} = {ip => $ip, active => $active};
 }
 
 sub all {
     my $self = shift;
-    return \%{$self->{nodes}};
+    return \%{$self->{data}};
 }
 
 1;

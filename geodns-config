@@ -75,6 +75,10 @@ Mojo::IOLoop->recurring(
         #app->log->debug("i: $i");
         $config->refresh;
         if ($config->dirty) {
+            if (!$config->ready) {
+                app->log->warn("Data not ready");
+                return;
+            }
             app->log->info("Data updated, reloading");
             $dns->setup_data;
 
