@@ -1,7 +1,7 @@
 package GeoDNS::Monitor::Panopta;
 use v5.12.0;
 use Moose;
-extends 'GeoDNS::Monitor';
+extends 'GeoDNS::Monitor', 'GeoDNS::Log';
 use Data::Dump qw(pp);
 use JSON qw(decode_json);
 
@@ -81,22 +81,35 @@ sub _r {
 
 sub start {
     my $self = shift;
-    $self->mojo->log->info("Starting panopta ...");
-    $self->load_servers;
-    Mojo::IOLoop->recurring(
-        120 => sub {
-            $self->load_outages;
+    my $delay = Mojo::IOLoop->delay(
+        sub {
+            my $delay = shift;
+            $self->load_servers($delay->begin);
+        },
+        sub {
+            my $delay = shift;
+            $self->load_outages($delay->begin);
+        },
+        sub {
+            Mojo::IOLoop->recurring(
+                60 => sub {
+                    $self->load_outages;
+                }
+            );
+
+            Mojo::IOLoop->recurring(
+                1800 => sub {
+                    $self->load_servers;
+                }
+            );
+
         }
     );
-    Mojo::IOLoop->recurring(
-        1800 => sub {
-            $self->load_servers;
-        }
-    );
+
 }
 
 sub load_servers {
-    my $self = shift;
+    my ($self, $cb) = @_;
     $self->mojo->log->info("Refreshing Panopta server list");
     $self->_r(
         "config",
@@ -105,12 +118,13 @@ sub load_servers {
         sub {
             my $data = shift;
             $self->servers({map { $_->{server_id} => $_ } @{$data->{servers}}});
+            if ($cb) { $cb->() }
         }
     );
 }
 
 sub load_outages {
-    my $self = shift;
+    my ($self, $cb) = @_;
     $self->mojo->log->info("Refreshing Panopta outages");
     $self->_r(
         "status",
@@ -119,6 +133,7 @@ sub load_outages {
         sub {
             my $data = shift;
             $self->outages_list({map { $_->{server_id} => $_ } @{$data->{outages}}});
+            if ($cb) { $cb->() }
         }
     );
 }

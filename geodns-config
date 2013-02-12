@@ -63,6 +63,7 @@ app->log->on(
 );
 
 for my $monitor (keys %monitors) {
+    app->log->warn("Starting $monitor monitor");
     $monitors{$monitor}->start();
 }
 
