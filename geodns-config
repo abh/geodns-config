@@ -37,10 +37,12 @@ for my $module (@{$loader->search('GeoDNS::Monitor')}) {
 
 my $nodes;
 {
-    my $node_module = "GeoDNS::Nodes::" . app->config->{nodes}->{type};
+    die "'nodes' configuration required" unless app->config->{nodes};
+    my ($type) = keys %{ app->config->{nodes} };
+    my $node_module = "GeoDNS::Nodes::$type";
     my $e = $loader->load($node_module);
     warn qq{Loading "$node_module" failed: $e} if ref $e;
-    $nodes = $node_module->new( app->config->{nodes}->{config} );
+    $nodes = $node_module->new( %{ app->config->{nodes}->{$type} } );
 }
 
 my $config = GeoConfig->new(
