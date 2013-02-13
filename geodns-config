@@ -15,6 +15,9 @@ if (app->config->{secret}) {
     app->secret(app->config->{secret});
 }
 
+my $domain_name = app->config->{domain_name}
+  or die "domain_name configuration required\n";
+
 my %monitors;
 
 my $loader = Mojo::Loader->new;
@@ -86,7 +89,7 @@ Mojo::IOLoop->recurring(
 
             #say "DNS: ", pp($dns->dns);
             app->log->info("Updating DNS data file");
-            $dns->write_dns("dns/g.develooper.org.json");
+            $dns->write_dns("dns/${domain_name}.json");
         }
     }
 );
