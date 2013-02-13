@@ -41,7 +41,6 @@ for my $type (qw(Nodes Labels)) {
     app->config->{$lc_type} or next;
     my ($module) = keys %{ app->config->{nodes} };
     my $module_name = "GeoDNS::${type}::${module}";
-    warn "NODE MODULE: $module_name";
     my $e = $loader->load($module_name);
     warn qq{Loading "$module_name" failed: $e} if ref $e;
     $config{$lc_type} = $module_name->new( %{ app->config->{nodes}->{$module} } );
