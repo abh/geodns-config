@@ -11,6 +11,14 @@ app->log(GeoDNS::Log->singleton);
 
 plugin 'Config' => {default => {monitors => [], secret => ''}};
 
+if (app->config->{monitors}) {
+    for my $monitor (@{ app->config->{monitors}} ) {
+        my ($name) = keys %$monitor;
+        $monitor = $monitor->{$name};
+        $monitor->{name} = $name;
+    }
+}
+
 if (app->config->{secret}) {
     app->secret(app->config->{secret});
 }
@@ -26,14 +34,16 @@ for my $module (@{$loader->search('GeoDNS::Monitor')}) {
     my $monitor = $module;
     $monitor =~ s/^GeoDNS::Monitor:://;
 
-    next unless grep { lc $monitor eq lc $_ } @{app->config->{monitors}};
+    my ($config) = grep { lc $monitor eq lc $_->{name} } @{app->config->{monitors}};
+    next unless $config;
 
     app->log->info("Loading monitor $monitor");
 
     my $e = $loader->load($module);
     warn qq{Loading "$module" failed: $e} and next if ref $e;
 
-    my %args = %{app->config->{lc $monitor}};
+    my %args = %$config;
+    delete $args{name};
     $monitors{lc $monitor} = $module->new(%args, mojo => app);
 
 }
@@ -118,7 +128,8 @@ get '/log' => sub {
 get '/api/nodes' => sub {
     my $self = shift;
     my $nodes = $config->nodes->all;
-    my $ips  = $monitors{panopta}->ips;
+    #my $ips  = $monitors{panopta}->ips;
+    my $ips = {};
     my @nodes = map {
         my $ip = $nodes->{$_};
         {   name     => $_,
