@@ -1,4 +1,4 @@
-package GeoConfig::Log;
+package GeoDNS::Log::Role;
 use v5.12.0;
 use Moose::Role;
 use GeoDNS::Log;

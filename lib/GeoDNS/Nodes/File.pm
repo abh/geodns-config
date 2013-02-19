@@ -1,7 +1,7 @@
 package GeoDNS::Nodes::File;
 use Moose;
 extends 'GeoDNS::Nodes';
-with 'GeoDNS::JsonFile', 'GeoConfig::Log';
+with 'GeoDNS::JsonFile', 'GeoDNS::Log::Role';
 
 has 'name' => (
     isa     => 'Str',

@@ -1,6 +1,6 @@
 package GeoConfig::Config;
 use Moose;
-with 'GeoDNS::JsonFiles', 'GeoConfig::Log';
+with 'GeoDNS::JsonFiles', 'GeoDNS::Log::Role';
 use Data::Dump qw(pp);
 
 has 'config_path' => (
