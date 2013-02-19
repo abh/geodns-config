@@ -11,7 +11,7 @@ has 'config_path' => (
 
 sub BUILD {
     my $self = shift;
-    $self->refresh;
+    #$self->refresh;
 }
 
 has 'groups' => (

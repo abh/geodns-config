@@ -10,6 +10,7 @@ ok( my $g = GeoConfig->new(
     "new"
 );
 ok(my $d = $g->dns, 'dnsconfig');
+ok($g->refresh, 'refresh data');
 
 is_deeply($d->_setup_geo_rules("foo", {}), {}, "geo rules empty");
 is_deeply(

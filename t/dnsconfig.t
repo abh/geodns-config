@@ -10,6 +10,7 @@ ok( my $g = GeoConfig->new(
     ),
     "new"
 );
+ok($g->refresh, 'refresh data');
 ok(my $d = $g->dns, 'dnsconfig');
 
 # test outage
