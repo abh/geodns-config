@@ -1,9 +1,17 @@
 package GeoDNS::Nodes;
 use Moose;
+use GeoDNS::Node;
+
+has nodes => (
+    isa => 'HashRef[GeoDNS::Node]',
+    is  => 'rw',
+    default => sub { {} }
+);
 
 sub node_ip {
     my ($self, $node) = @_;
-    return $self->{data}->{$node}->{ip};
+    return unless $self->nodes->{$node};
+    return $self->nodes->{$node}->{ip};
 }
 
 sub set_ip {
@@ -11,12 +19,12 @@ sub set_ip {
     unless (defined $ip) {
         $active = 1;
     }
-    return $self->{data}->{$node} = {ip => $ip, active => $active};
+    return $self->nodes->{$node} = {ip => $ip, active => $active};
 }
 
 sub all {
     my $self = shift;
-    return \%{$self->{data}};
+    return \%{$self->nodes};
 }
 
 

@@ -1,9 +1,12 @@
 use Test::More;
+use Data::Dump qw(pp);
 
 use_ok('GeoConfig');
 ok(my $g = GeoConfig->new(domain_name => 'example.net', config_path => 't/config-test'), "new");
-is($g->nodes->update, 0, 'update nodes, unchanged');
-ok($g->nodes->last_read_timestamp->{data}, 'last_read is not 0');
+ok($g->refresh, 'refresh data');
+is($g->nodes->update, 0, 'update nodes, not changed');
+isnt($g->nodes->last_read_timestamp, 0, 'last_read is set');
+
 is($g->nodes->node_ip("edge1.any"), '10.1.1.1', 'any1 pop');
 
 # TODO: need to simulate the data changing

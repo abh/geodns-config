@@ -128,13 +128,12 @@ get '/log' => sub {
 get '/api/nodes' => sub {
     my $self = shift;
     my $nodes = $config->nodes->all;
-    #my $ips  = $monitors{panopta}->ips;
-    my $ips = {};
+    warn "ALL: ", pp($nodes);
     my @nodes = map {
-        my $ip = $nodes->{$_};
+        my $d = $nodes->{$_};
         {   name     => $_,
-            ip       => $ip,
-            monitors => ($ips->{$ip} || [])
+            ip       => $d->ip,
+            #monitors => ($ips->{$d->ip} || [])
         }
     } sort keys %$nodes;
     $self->render(json => \@nodes);
