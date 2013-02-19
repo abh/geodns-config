@@ -23,12 +23,9 @@ has 'ua' => (
    default => sub { Mojo::UserAgent->new }, 
 );
 
-#get("flexnodes.json");
-#get("nodes.json");
-
 sub url {
     my ($self, $method) = @_;
-    
+
     my $address = join "/", 'https:/', $self->host, $self->alias, $method;
 
     # Create request
@@ -48,9 +45,21 @@ sub url {
 }
 
 sub get {
-    my ($self, $method) = @_;
-    my $ua = Mojo::UserAgent->new();
-    return $ua->get($self->url($method))->res;
+    my ($self, $method, $cb) = @_;
+
+    $self->ua->get(
+        $self->url($method),
+        sub {
+            my ($ua, $tx) = @_;
+            if ($cb) {
+                $cb->($tx->res);
+            }
+            else {
+                # todo make sure this is useful and log the response appropriately if it is
+                $self->log->info("$method called without callback");
+            }
+        }
+    );
 }
 
 1;
