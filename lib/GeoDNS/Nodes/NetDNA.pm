@@ -16,9 +16,10 @@ sub update {
                 my $nodes = $res->json('/data/nodes');
                 my %nodes = map {%$_} @$nodes;
                 for my $name (keys %nodes) {
-                    $self->log->debug("data for $name: ", Data::Dump::pp($nodes{$name}));
+                    # $self->log->debug("data for $name: ", Data::Dump::pp($nodes{$name}));
                     unless ($nodes{$name}->{ip}) {
-                        $self->log->info("node $name doesn't have an IP address, skipping");
+                        $self->log->info("node $name doesn't have an IP address, skipping")
+                            if $nodes{$name}->{active};
                         delete $nodes{$name};
                         next;
                     }
