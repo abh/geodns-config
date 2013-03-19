@@ -11,6 +11,8 @@ table > caption {
   padding-left: 4px;
 }
 
-tbody > tr > td.domain-type {
-  text-transform: lowercase;
+tbody > tr.node-inactive {
+	color: #777;
+	font-style: italic;
+    /*text-transform: uppercase;*/
 }

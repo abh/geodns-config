@@ -7,9 +7,8 @@
     </tr>
 </thead>
 <tbody>
-    <tr ng-repeat="outage in outages">
-        <td>{{outage.name}}</td>
-        <td>{{outage.ip}}</td>
+    <tr ng-repeat="check in checks">
+        <td>{{check | json}}</td>
     </tr>
 </tbody>
 </table>

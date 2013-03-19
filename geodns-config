@@ -12,7 +12,7 @@ app->log(GeoDNS::Log->singleton);
 plugin 'Config' => {default => {monitors => [], secret => ''}};
 
 if (app->config->{monitors}) {
-    for my $monitor (@{ app->config->{monitors}} ) {
+    for my $monitor (@{app->config->{monitors}}) {
         my ($name) = keys %$monitor;
         $monitor = $monitor->{$name};
         $monitor->{name} = $name;
@@ -26,43 +26,48 @@ if (app->config->{secret}) {
 my $domain_name = app->config->{domain_name}
   or die "domain_name configuration required\n";
 
+my $loader = Mojo::Loader->new;
+
+my %config;
+for my $type (qw(Nodes Labels)) {
+    my $lc_type = lc $type;
+    app->config->{$lc_type} or next;
+    my ($module)    = keys %{app->config->{nodes}};
+    my $module_name = "GeoDNS::${type}::${module}";
+    my $e           = $loader->load($module_name);
+    warn qq{Loading "$module_name" failed: $e} if ref $e;
+    $config{$lc_type} = $module_name->new(%{app->config->{nodes}->{$module}});
+    if ($config{$lc_type}->can('ua')) {
+        $config{$lc_type}->ua(app->ua);
+    }
+}
+
+my $config = GeoConfig->new(
+    %config,
+    'config_path' => 'config',
+    domain_name   => app->config->{domain_name}
+);
+
 my %monitors;
 
-my $loader = Mojo::Loader->new;
 for my $module (@{$loader->search('GeoDNS::Monitor')}) {
 
     my $monitor = $module;
     $monitor =~ s/^GeoDNS::Monitor:://;
 
-    my ($config) = grep { lc $monitor eq lc $_->{name} } @{app->config->{monitors}};
-    next unless $config;
+    my ($module_config) = grep { lc $monitor eq lc $_->{name} } @{app->config->{monitors}};
+    next unless $module_config;
 
     app->log->info("Loading monitor $monitor");
 
     my $e = $loader->load($module);
     warn qq{Loading "$module" failed: $e} and next if ref $e;
 
-    my %args = %$config;
+    my %args = %$module_config;
     delete $args{name};
-    $monitors{lc $monitor} = $module->new(%args, mojo => app);
-
+    $monitors{lc $monitor} = $module->new(%args, mojo => app, config => $config);
 }
 
-my %config;
-for my $type (qw(Nodes Labels)) {
-    my $lc_type = lc $type;
-    app->config->{$lc_type} or next;
-    my ($module) = keys %{ app->config->{nodes} };
-    my $module_name = "GeoDNS::${type}::${module}";
-    my $e = $loader->load($module_name);
-    warn qq{Loading "$module_name" failed: $e} if ref $e;
-    $config{$lc_type} = $module_name->new( %{ app->config->{nodes}->{$module} } );
-}
-my $config = GeoConfig->new(
-    %config,
-    'config_path' => 'config',
-    domain_name   => app->config->{domain_name}
-);
 my $dns = $config->dns;
 
 app->log->info("App starting");
@@ -78,20 +83,30 @@ app->log->on(
 );
 
 for my $monitor (keys %monitors) {
-    app->log->warn("Starting $monitor monitor");
-    $monitors{$monitor}->start();
+    Mojo::IOLoop->timer(
+        1 => sub {
+            app->log->warn("Starting $monitor monitor");
+            $monitors{$monitor}->start();
+        }
+    );
 }
 
 my $i = 0;
 Mojo::IOLoop->recurring(
-    2 => sub {
+    3 => sub {
         $i++;
 
         #app->log->debug("i: $i");
         $config->refresh;
+
+        if (%monitors and (grep { !$_->ready } values %monitors)) {
+            app->log->warn("Monitor not ready");
+            return;
+        }
+
         if ($config->dirty) {
             if (!$config->ready) {
-                app->log->warn("Data not ready: ". join ", ", $config->not_ready);
+                app->log->warn("Data not ready: " . join ", ", $config->not_ready);
                 return;
             }
             app->log->info("Data updated, reloading");
@@ -126,14 +141,24 @@ get '/log' => sub {
 };
 
 get '/api/nodes' => sub {
-    my $self = shift;
+    my $self  = shift;
     my $nodes = $config->nodes->all;
-    warn "ALL: ", pp($nodes);
+    # warn "ALL: ", pp($nodes);
+
     my @nodes = map {
         my $d = $nodes->{$_};
-        {   name     => $_,
+        {   name     => $d->name,
             ip       => $d->ip,
-            #monitors => ($ips->{$d->ip} || [])
+            active   => $d->active,
+            monitors => (
+                [   map {
+                        {
+                            %{$monitors{$_}->status($d->name)},
+                              name => $_,
+                        }
+                    } sort keys %monitors
+                ]
+            ),
         }
     } sort keys %$nodes;
     $self->render(json => \@nodes);
@@ -166,7 +191,7 @@ get '/api/monitor/:monitor/status' => sub {
         app->log->warn("Unknown monitor name :monitor $monitor_name");
         $self->render(json => {});
     }
-    $self->render(json => {outages => $monitor->outages});
+    $self->render(json => {checks => $monitor->checks});
 };
 
 get '/api/monitor/:monitor/servers' => sub {

@@ -4,20 +4,22 @@
     <tr>
         <th>Name</th>
         <th>IP</th>
-
+        <th>Status</th>
+        <th>Monitors</th>
     </tr>
 </thead>
 <tbody>
-    <tr ng-repeat="node in nodes">
+    <tr ng-repeat="node in nodes" class="{{{1: '', 0: 'node-inactive'}[node.active]}}">
         <td>{{node.name}}</td>
         <td>{{node.ip}}</td>
+        <td>{{{1: '', 0: 'inactive'}[node.active]}}</td>
         <td>
             <span ng-repeat="mon in node.monitors">
                 <button class="btn btn-mini"
-                    ng-class="{'btn-danger': mon.alert,
-                               'btn-success': mon.alert==0}"
+                    ng-class="{'btn-danger': mon.status=='down',
+                               'btn-success': mon.status=='up'}"
                     >
-                    {{mon.name}} ({{mon.id}})
+                    {{mon.name}}: [{{mon.status}}] {{mon.message}}
                 </button>
             </span>
     </tr>
