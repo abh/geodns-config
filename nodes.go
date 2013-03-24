@@ -71,18 +71,14 @@ func (ns *Nodes) Count() int {
 	return len(ns.nodes)
 }
 
-func (ns *Nodes) LoadFile(fileName string) error {
+type objMap map[string]interface{}
 
+func jsonLoader(fileName string, objmap map[string]interface{}, fn func() error) error {
 	fh, err := os.Open(fileName)
 	if err != nil {
 		log.Println("Could not read ", fileName, ": ", err)
 		return err
 	}
-
-	ns.mutex.Lock()
-	defer ns.mutex.Unlock()
-
-	var objmap map[string]interface{}
 
 	decoder := json.NewDecoder(fh)
 	if err = decoder.Decode(&objmap); err != nil {
@@ -99,31 +95,45 @@ func (ns *Nodes) LoadFile(fileName string) error {
 			fh.Name(), extra, err)
 	}
 
-	var nodes = nodesMap{}
-	for name, v := range objmap {
-		data := v.(map[string]interface{})
-		log.Println("name, data", name, data)
+	err = fn()
+	return err
 
-		active, err := toBool(data["active"])
-		if err != nil {
-			return err
+}
+
+func (ns *Nodes) LoadFile(fileName string) error {
+
+	objmap := make(objMap)
+
+	return jsonLoader(fileName, objmap, func() error {
+		ns.mutex.Lock()
+		defer ns.mutex.Unlock()
+
+		var nodes = nodesMap{}
+		for name, v := range objmap {
+			data := v.(map[string]interface{})
+			log.Println("name, data", name, data)
+
+			active, err := toBool(data["active"])
+			if err != nil {
+				return err
+			}
+
+			ip := net.ParseIP(data["ip"].(string))
+			if ip == nil {
+				return fmt.Errorf("Invalid IP address %s", data["ip"].(string))
+			}
+
+			node := &Node{Ip: ip, Active: active}
+
+			nodes[name] = node
+			log.Printf("%#v\n", node)
+
 		}
 
-		ip := net.ParseIP(data["ip"].(string))
-		if ip == nil {
-			return fmt.Errorf("Invalid IP address %s", data["ip"].(string))
-		}
+		ns.nodes = nodes
 
-		node := &Node{Ip: ip, Active: active}
-
-		nodes[name] = node
-		log.Printf("%#v\n", node)
-
-	}
-
-	ns.nodes = nodes
-
-	return nil
+		return nil
+	})
 }
 
 func toInt(i interface{}) (int, error) {
