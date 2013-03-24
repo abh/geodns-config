@@ -1,0 +1,7 @@
+{
+  "*.any": [ "@" ],
+  "*.sin": [ "sg", "th", "id", "my" ],
+  "*.ams": [ "europe", "nl", "fr" ],
+  "*.lhr": [ "europe=1000", "uk" ],
+  "flex04.ams04": [ "europe=1" ]
+}
