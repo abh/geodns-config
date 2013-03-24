@@ -7,7 +7,7 @@ import (
 	"sync"
 )
 
-type labelsMap map[string]Label
+type labelsMap map[string]*Label
 
 type Labels struct {
 	labels labelsMap
@@ -55,7 +55,7 @@ func (ls *Labels) SetGroup(name, groupName string) {
 	defer ls.mutex.Unlock()
 	label, ok := ls.labels[name]
 	if !ok {
-		label = Label{Name: name, LabelNodes: make(map[string]labelNode)}
+		label = &Label{Name: name, LabelNodes: make(map[string]labelNode)}
 		ls.labels[name] = label
 	}
 	label.GroupName = groupName
@@ -66,7 +66,7 @@ func (ls *Labels) SetNode(name string, node labelNode) {
 	defer ls.mutex.Unlock()
 	label, ok := ls.labels[name]
 	if !ok {
-		label = Label{Name: name, LabelNodes: make(map[string]labelNode)}
+		label = &Label{Name: name, LabelNodes: make(map[string]labelNode)}
 		ls.labels[name] = label
 	}
 
@@ -78,7 +78,7 @@ func (ls *Labels) Get(name string) *Label {
 	ls.mutex.Lock()
 	defer ls.mutex.Unlock()
 	if label, ok := ls.labels[name]; ok {
-		return &label
+		return label
 	}
 	return nil
 }

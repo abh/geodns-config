@@ -28,4 +28,9 @@ func (s *LabelsSuite) TestLoad(c *C) {
 	s.Labels.Clear()
 	err := s.Labels.LoadFile("testdata/labels.json")
 	c.Assert(err, IsNil)
+
+	c.Assert(s.Labels.Get("zone1.example").GroupName, Equals, "edge1-global")
+	c.Assert(s.Labels.Get("zone2.example").LabelNodes["edge1.any"].Name, Equals, "edge1.any")
+	c.Assert(s.Labels.Get("zone2.example").LabelNodes["edge1.any"].Ip.String(), Equals, "10.1.1.10")
+
 }
