@@ -51,7 +51,7 @@ func (gm *GeoMap) LoadFile(fileName string) error {
 			for _, g := range v.([]interface{}) {
 				gSplit := strings.Split(g.(string), "=")
 
-				log.Printf("gSplit: %#v\n", gSplit)
+				// log.Printf("gSplit: %#v\n", gSplit)
 
 				weight := 100
 
@@ -68,7 +68,7 @@ func (gm *GeoMap) LoadFile(fileName string) error {
 
 			}
 
-			log.Printf("%s: %#v", name, geomap)
+			// log.Printf("%s: %#v", name, geomap)
 
 		}
 

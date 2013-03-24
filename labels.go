@@ -59,7 +59,6 @@ func (ls *Labels) SetGroup(name, groupName string) {
 		ls.labels[name] = label
 	}
 	label.GroupName = groupName
-	log.Printf("GROUP: %#v", ls.labels[name])
 }
 
 func (ls *Labels) SetNode(name string, node labelNode) {
@@ -102,10 +101,8 @@ func (ls *Labels) LoadFile(fileName string) error {
 
 		for name, v := range objmap {
 			data := v.(map[string]interface{})
-			log.Println("name, data", name, data)
 
 			for labelName, labelTarget := range data {
-				log.Println("NAME/TARHET", labelName, labelTarget)
 
 				if labelName == "group" {
 					newLabels.SetGroup(name, labelTarget.(string))
