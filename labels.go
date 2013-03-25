@@ -108,11 +108,15 @@ func (ls *Labels) LoadFile(fileName string) error {
 					continue
 				}
 
-				ip := net.ParseIP(labelTarget.(string))
-				if ip == nil {
-					return fmt.Errorf("Invalid IP address for '%s'/'%s': %s", name, labelName, labelTarget)
-				}
+				var ip net.IP
 
+				if len(labelTarget.(string)) > 0 {
+					ip = net.ParseIP(labelTarget.(string))
+
+					if ip == nil {
+						return fmt.Errorf("Invalid IP address for '%s'/'%s': %s", name, labelName, labelTarget)
+					}
+				}
 				node := labelNode{Name: labelName, Ip: ip}
 				newLabels.SetNode(name, node)
 			}

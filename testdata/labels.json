@@ -1,4 +1,5 @@
 {
   "zone1.example": { "group": "edge1-global" },
-  "zone2.example": { "edge1.any": "10.1.1.10", "flex1.sin": "10.20.1.10" }
+  "zone2.example": { "edge01.any": "10.1.1.10", "flex01.sin": "10.20.1.10" },
+  "zone3.example": { "edge01.any": "", "flex01.sin": "" }
 }

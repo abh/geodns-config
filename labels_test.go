@@ -30,7 +30,8 @@ func (s *LabelsSuite) TestLoad(c *C) {
 	c.Assert(err, IsNil)
 
 	c.Assert(s.Labels.Get("zone1.example").GroupName, Equals, "edge1-global")
-	c.Assert(s.Labels.Get("zone2.example").LabelNodes["edge1.any"].Name, Equals, "edge1.any")
-	c.Assert(s.Labels.Get("zone2.example").LabelNodes["edge1.any"].Ip.String(), Equals, "10.1.1.10")
+	c.Assert(s.Labels.Get("zone2.example").LabelNodes["edge01.any"].Name, Equals, "edge01.any")
+	c.Assert(s.Labels.Get("zone2.example").LabelNodes["edge01.any"].Ip.String(), Equals, "10.1.1.10")
+	c.Assert(s.Labels.Get("zone3.example").LabelNodes["edge01.any"].Ip, IsNil)
 
 }

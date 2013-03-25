@@ -78,22 +78,24 @@ func (ns *Nodes) LoadFile(fileName string) error {
 		var nodes = nodesMap{}
 		for name, v := range objmap {
 			data := v.(map[string]interface{})
-			log.Println("name, data", name, data)
+			// log.Println("name, data", name, data)
 
 			active, err := toBool(data["active"])
 			if err != nil {
 				return err
 			}
 
-			ip := net.ParseIP(data["ip"].(string))
+			ipStr := data["ip"].(string)
+
+			ip := net.ParseIP(ipStr)
 			if ip == nil {
-				return fmt.Errorf("Invalid IP address %s", data["ip"].(string))
+				return fmt.Errorf("Invalid IP address %s for node '%s'", ipStr, name)
 			}
 
 			node := &Node{Ip: ip, Active: active}
 
 			nodes[name] = node
-			log.Printf("%#v\n", node)
+			// log.Printf("%#v\n", node)
 
 		}
 
