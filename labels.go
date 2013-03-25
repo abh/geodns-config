@@ -36,11 +36,10 @@ func (ls *Labels) All() (r []*Label) {
 	ls.mutex.Lock()
 	defer ls.mutex.Unlock()
 
-	// for i, node := range ls.labels {
-	// log.Println(i, node)
-	// r = append(r, node)
-	// }
-	// log.Println("Rs", r)
+	for i, label := range ls.labels {
+		log.Println(i, label)
+		r = append(r, label)
+	}
 	return
 }
 
