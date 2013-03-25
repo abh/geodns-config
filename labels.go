@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net"
 	"sync"
 )
@@ -36,8 +35,7 @@ func (ls *Labels) All() (r []*Label) {
 	ls.mutex.Lock()
 	defer ls.mutex.Unlock()
 
-	for i, label := range ls.labels {
-		log.Println(i, label)
+	for _, label := range ls.labels {
 		r = append(r, label)
 	}
 	return
@@ -93,9 +91,6 @@ func (ls *Labels) LoadFile(fileName string) error {
 	objmap := make(objMap)
 
 	return jsonLoader(fileName, objmap, func() error {
-
-		log.Println("Loading labels from", fileName)
-
 		var newLabels = NewLabels()
 
 		for name, v := range objmap {

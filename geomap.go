@@ -62,7 +62,7 @@ func (gm *GeoMap) LoadFile(fileName string) error {
 		geomap := geoTargetMap{}
 
 		for name, v := range objmap {
-			log.Printf("%s: %#v\n", name, v)
+			// log.Printf("%s: %#v\n", name, v)
 
 			if _, ok := geomap[name]; !ok {
 				geomap[name] = make([]*GeoTarget, 0)

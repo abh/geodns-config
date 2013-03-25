@@ -2,7 +2,6 @@ package main
 
 import (
 	. "launchpad.net/gocheck"
-	"log"
 )
 
 type GeoMapSuite struct {
@@ -13,7 +12,6 @@ var _ = Suite(&GeoMapSuite{})
 
 func (s *GeoMapSuite) SetUpSuite(c *C) {
 	s.GeoMap = NewGeoMap()
-	log.Println("setup geomap", s)
 }
 
 func (s *GeoMapSuite) TestGeoMap(c *C) {
