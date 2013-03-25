@@ -3,11 +3,12 @@ package main
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"sync"
 )
 
-type geoTargetMap map[string][]GeoTarget
+type geoTargetMap map[string][]*GeoTarget
 
 type GeoMap struct {
 	geomap geoTargetMap
@@ -31,6 +32,25 @@ func (gm *GeoMap) Clear() {
 	gm.geomap = make(geoTargetMap)
 }
 
+func (gm *GeoMap) GetNodeGeos(node string) []*GeoTarget {
+
+	for k, geos := range gm.geomap {
+		kr := strings.Replace(k, ".", "\\.", -1)
+		kr = strings.Replace(k, "+", "\\+", -1)
+		kr = strings.Replace(kr, "*", "[^\\.]+", -1)
+		re, err := regexp.Compile("^" + kr + "$")
+		if err != nil {
+			log.Println("Could not make regexp from", k, err)
+			continue
+		}
+		if re.MatchString(node) {
+			return geos
+		}
+	}
+
+	return nil
+}
+
 func (gm *GeoMap) LoadFile(fileName string) error {
 
 	objmap := make(map[string]interface{})
@@ -45,7 +65,7 @@ func (gm *GeoMap) LoadFile(fileName string) error {
 			log.Printf("%s: %#v\n", name, v)
 
 			if _, ok := geomap[name]; !ok {
-				geomap[name] = make([]GeoTarget, 0)
+				geomap[name] = make([]*GeoTarget, 0)
 			}
 
 			for _, g := range v.([]interface{}) {
@@ -64,7 +84,7 @@ func (gm *GeoMap) LoadFile(fileName string) error {
 				}
 
 				geo := GeoTarget{target: gSplit[0], weight: weight}
-				geomap[name] = append(geomap[name], geo)
+				geomap[name] = append(geomap[name], &geo)
 
 			}
 
