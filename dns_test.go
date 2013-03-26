@@ -13,13 +13,17 @@ func (s *DnsSuite) SetUpSuite(c *C) {
 }
 
 func (s *LabelsSuite) TestDnsLoad(c *C) {
-	z := &Zone{Name: "example.com"}
+	z := new(Zone)
+	z.Name = "example.com"
+	z.Options.Ttl = 25
 	z.Labels.LoadFile("testdata/labels.json")
 	z.GeoMap.LoadFile("testdata/geomap.json")
 	z.Nodes.LoadFile("testdata/nodes.json")
 
 	zd, err := z.BuildZone()
 	c.Assert(err, IsNil)
+
+	c.Check(zd.Ttl, Equals, 25)
 
 	t1, ok := zd.Data["zone2.example"]
 	c.Assert(ok, Equals, true)

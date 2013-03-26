@@ -47,7 +47,7 @@ func (z *Zone) BuildZone() (*zoneJson, error) {
 	js := zoneJson{Data: zoneData{}}
 
 	js.MaxHosts = z.Options.MaxHosts
-	js.Ttl = z.Options.MaxHosts
+	js.Ttl = z.Options.Ttl
 
 	js.Data[""] = new(zoneLabel)
 	js.Data[""].Ns = map[string]string{"a.ntpns.org": "", "b.ntpns.org": ""}
