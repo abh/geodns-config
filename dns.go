@@ -34,7 +34,7 @@ func (z *Zone) BuildJSON() (string, error) {
 }
 
 func (js *zoneJson) JSON() (string, error) {
-	b, err := json.Marshal(js)
+	b, err := json.MarshalIndent(js, "", "  ")
 	if err != nil {
 		return "", err
 	}
