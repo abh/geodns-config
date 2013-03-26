@@ -2,9 +2,10 @@ package main
 
 import (
 	"flag"
-	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 )
 
 var VERSION string = "2.0.0"
@@ -12,6 +13,7 @@ var gitVersion string
 
 var (
 	zonesFile = flag.String("config", "config/zones.json", "zones.json configuration file")
+	outputDir = flag.String("output", "dns", "output directory")
 )
 
 func init() {
@@ -50,8 +52,12 @@ func main() {
 			continue
 		}
 
-		fmt.Print(js)
-
+		fileName := filepath.Join(*outputDir, zone.Name+".json")
+		err = ioutil.WriteFile(fileName, []byte(js), 0644)
+		if err != nil {
+			log.Printf("Could not write '%s' to '%s': %s", zone.Name, fileName, err)
+			continue
+		}
 	}
 
 }
