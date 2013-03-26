@@ -25,6 +25,8 @@ func init() {
 
 func main() {
 
+	flag.Parse()
+
 	zones := new(Zones)
 
 	err := zones.LoadZonesConfig(*zonesFile)
