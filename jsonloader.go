@@ -14,7 +14,6 @@ type objMap map[string]interface{}
 func jsonLoader(fileName string, objmap objMap, fn func() error) error {
 	fh, err := os.Open(fileName)
 	if err != nil {
-		log.Println("Could not read ", fileName, ": ", err)
 		return err
 	}
 

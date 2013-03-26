@@ -2,7 +2,6 @@ package main
 
 import (
 	. "launchpad.net/gocheck"
-	"log"
 	"net"
 )
 
@@ -14,7 +13,6 @@ var _ = Suite(&NodesSuite{})
 
 func (s *NodesSuite) SetUpSuite(c *C) {
 	s.Nodes = NewNodes()
-	log.Println("setup nodes", s)
 }
 
 func (s *NodesSuite) TestNodes(c *C) {
