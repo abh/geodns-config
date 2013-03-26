@@ -19,13 +19,19 @@ type zoneLabel struct {
 	Aaaa  []interface{}     `json:"aaaa,omitempty"`
 }
 
-func NewZone(name string) *Zone {
-	zone := new(Zone)
-	zone.Name = name
-	return zone
-}
-
 type zoneData map[string]*zoneLabel
+
+func (z *Zone) BuildJSON() (string, error) {
+	zd, err := z.BuildZone()
+	if err != nil {
+		return "", err
+	}
+	js, err := zd.JSON()
+	if err != nil {
+		return "", err
+	}
+	return js, nil
+}
 
 func (js *zoneJson) JSON() (string, error) {
 	b, err := json.Marshal(js)
