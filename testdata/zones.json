@@ -3,6 +3,7 @@
     "ttl": 120,
     "contact": "noc-x@example.com",
     "max_hosts": 3,
+    "ns": ["ns1.example.com", "ns2.example.com"],
     "labels": "labels.json",
     "nodes": "nodes.json",
     "geomap": "geomap.json"

@@ -50,7 +50,10 @@ func (z *Zone) BuildZone() (*zoneJson, error) {
 	js.Ttl = z.Options.Ttl
 
 	js.Data[""] = new(zoneLabel)
-	js.Data[""].Ns = map[string]string{"a.ntpns.org": "", "b.ntpns.org": ""}
+	js.Data[""].Ns = map[string]string{}
+	for _, ns := range z.Ns {
+		js.Data[""].Ns[ns] = ""
+	}
 
 	for _, labelData := range z.Labels.All() {
 		if len(labelData.GroupName) > 0 {

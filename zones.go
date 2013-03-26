@@ -15,6 +15,7 @@ type Zones struct {
 type Zone struct {
 	Name       string
 	Options    ZoneOptions
+	Ns         []string
 	Labels     Labels
 	Nodes      Nodes
 	GeoMap     GeoMap
@@ -106,6 +107,19 @@ func (zs *Zones) LoadZonesConfig(fileName string) error {
 						return fmt.Errorf("Invalid integer '%s' in '%s' option: %s", v, key, err)
 					}
 					zone.Options.MaxHosts = i
+				case "ns":
+					switch v.(type) {
+					case []interface{}:
+						nsList := v.([]interface{})
+						ns := make([]string, len(nsList))
+						for i, v := range nsList {
+							ns[i] = v.(string)
+						}
+						zone.Ns = ns
+					default:
+						return fmt.Errorf("Bad ns parameter for '%s'\n", zoneName)
+					}
+
 				case "labels":
 					zone.LabelsFile = absPath(fileName, v.(string))
 				case "nodes":
