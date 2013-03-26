@@ -5,13 +5,6 @@ import (
 	"log"
 )
 
-type Zone struct {
-	Name   string
-	Labels Labels
-	Nodes  Nodes
-	GeoMap GeoMap
-}
-
 type zoneJson struct {
 	Data     zoneData `json:"data"`
 	Ttl      int      `json:"ttl"`
@@ -47,8 +40,8 @@ func (z *Zone) BuildZone() (*zoneJson, error) {
 
 	js := zoneJson{Data: zoneData{}}
 
-	js.MaxHosts = 2
-	js.Ttl = 60
+	js.MaxHosts = z.Options.MaxHosts
+	js.Ttl = z.Options.MaxHosts
 
 	js.Data[""] = new(zoneLabel)
 	js.Data[""].Ns = map[string]string{"a.ntpns.org": "", "b.ntpns.org": ""}

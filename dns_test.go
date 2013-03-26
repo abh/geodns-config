@@ -13,7 +13,7 @@ func (s *DnsSuite) SetUpSuite(c *C) {
 }
 
 func (s *LabelsSuite) TestDnsLoad(c *C) {
-	z := NewZone("example.com")
+	z := &Zone{Name: "example.com"}
 	z.Labels.LoadFile("testdata/labels.json")
 	z.GeoMap.LoadFile("testdata/geomap.json")
 	z.Nodes.LoadFile("testdata/nodes.json")

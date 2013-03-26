@@ -1,0 +1,14 @@
+{
+  "x.example.com": {
+    "ttl": 120,
+    "contact": "noc-x@example.com",
+    "max_hosts": 3,
+    "labels": "labels.json",
+    "nodes": "nodes.json",
+    "geomap": "geomap.json"
+  },
+  "z.example.com": {
+    "contact": "noc-z@example.com",
+    "max_hosts": 2
+  }
+}
