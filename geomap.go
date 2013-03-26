@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"regexp"
 	"strings"
 	"sync"
 )
@@ -35,15 +33,7 @@ func (gm *GeoMap) Clear() {
 func (gm *GeoMap) GetNodeGeos(node string) []*GeoTarget {
 
 	for k, geos := range gm.geomap {
-		kr := strings.Replace(k, ".", "\\.", -1)
-		kr = strings.Replace(k, "+", "\\+", -1)
-		kr = strings.Replace(kr, "*", "[^\\.]+", -1)
-		re, err := regexp.Compile("^" + kr + "$")
-		if err != nil {
-			log.Println("Could not make regexp from", k, err)
-			continue
-		}
-		if re.MatchString(node) {
+		if matchWildcard(k, node) {
 			return geos
 		}
 	}
