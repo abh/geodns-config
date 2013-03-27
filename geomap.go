@@ -45,6 +45,10 @@ func (gm *GeoMap) GetNodeGeos(node string) []*GeoTarget {
 		}
 	}
 
+	if geo, ok := gm.geomap["default"]; ok {
+		return geo
+	}
+
 	return nil
 }
 

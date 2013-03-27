@@ -1,4 +1,7 @@
 {
+
+  "default": [ "@=100"],
+
   "*.any":  [ "@" ],
   "*.sin":  [ "sg", "th", "id", "my" ],
   "*.ams*": [ "europe", "nl", "fr" ],
