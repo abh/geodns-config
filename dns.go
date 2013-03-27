@@ -91,6 +91,15 @@ func (z *Zone) BuildZone() (*zoneJson, error) {
 
 				trg := []interface{}{ip.String(), geo.weight}
 				js.Data[geoName].A = append(js.Data[geoName].A, trg)
+
+				if d, ok := js.Data[labelData.Name]; ok {
+					if len(d.A) == 0 {
+						log.Println("No global A records for", labelData.Name)
+					}
+				} else {
+					log.Println("No global A records for", labelData.Name)
+				}
+
 			}
 
 		}

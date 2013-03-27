@@ -1,6 +1,10 @@
 {
-  "zone1.example": { "group": "edge1-global" },
-  "zone2.example": { "edge01.any": "10.1.1.10", "flex01.sin": "10.20.1.10", "edge01.lhr": "" },
-  "zone3.example": { "edge01.any": "", "flex01.sin": "" },
-  "zone4": { "edge01.sea": "", "edge01.any": "" }
+    "zone1.example": { "group": "edge1-global" },
+    "zone2.example": { "edge01.any": "10.1.1.10", "flex01.sin": "10.20.1.10", "edge01.lhr": "" },
+    "zone3.example": { "edge01.any": "", "flex01.sin": "" },
+    "zone4": {
+        "flex04.ams04": "",
+        "edge01.ams": "",
+        "edge01.any": ""
+    }
 }
