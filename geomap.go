@@ -32,6 +32,13 @@ func (gm *GeoMap) Clear() {
 
 func (gm *GeoMap) GetNodeGeos(node string) []*GeoTarget {
 
+	gm.mutex.Lock()
+	defer gm.mutex.Unlock()
+
+	if geo, ok := gm.geomap[node]; ok {
+		return geo
+	}
+
 	for k, geos := range gm.geomap {
 		if matchWildcard(k, node) {
 			return geos

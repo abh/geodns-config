@@ -23,9 +23,10 @@ func (s *GeoMapSuite) TestGeoLoad(c *C) {
 	err := s.GeoMap.LoadFile("testdata/geomap.json")
 	c.Assert(err, IsNil)
 
-	c.Assert(s.GeoMap.geomap["*.ams"][0].target, Equals, "europe")
+	c.Assert(s.GeoMap.geomap["*.ams*"][0].target, Equals, "europe")
 	c.Assert(s.GeoMap.geomap["*.lhr"][0].weight, Equals, 1000)
 
+	// make sure we get the more specific entry
 	c.Assert(s.GeoMap.GetNodeGeos("flex04.ams04")[0].weight, Equals, 1)
 	c.Assert(s.GeoMap.GetNodeGeos("flex04.ams04")[0].target, Equals, "europe")
 
