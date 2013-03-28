@@ -6,6 +6,6 @@
   "*.sin":  [ "sg", "th", "id", "my" ],
   "*.ams*": [ "europe", "nl", "fr" ],
   "*.lhr":  [ "europe=1000", "uk" ],
-  "*.sea":  [ "us" ],
+  "*.sea":  [ "us", "@" ],
   "flex04.ams04": [ "europe=1" ]
 }

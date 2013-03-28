@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"sync"
 )
 
-type geoTargetMap map[string][]*GeoTarget
+type geoTargetList []*GeoTarget
 
+type geoTargetMap map[string]geoTargetList
 type GeoMap struct {
 	geomap geoTargetMap
 	mutex  sync.Mutex
@@ -17,6 +19,18 @@ type GeoTarget struct {
 	target string
 	weight int
 }
+
+func (a geoTargetList) Less(i, j int) bool {
+	iLen := len(a[i].target)
+	jLen := len(a[j].target)
+	if iLen == jLen {
+		return a[i].target < a[j].target
+	}
+	return iLen < jLen
+}
+func (s geoTargetList) Len() int      { return len(s) }
+func (s geoTargetList) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+func (s geoTargetList) Sort()         { sort.Sort(s) }
 
 func NewGeoMap() GeoMap {
 	gm := GeoMap{}
@@ -88,6 +102,8 @@ func (gm *GeoMap) LoadFile(fileName string) error {
 				geomap[name] = append(geomap[name], &geo)
 
 			}
+
+			geomap[name].Sort()
 
 			// log.Printf("%s: %#v", name, geomap)
 
