@@ -43,9 +43,15 @@ func (s *LabelsSuite) TestDnsLoad(c *C) {
 	t1, ok = zd.Data["zone4.us"]
 	c.Assert(ok, Equals, false) // edge01.sea is inactive
 
-	// log.Println("T1", spew.Sdump(t1))
+	t1, ok = zd.Data["any-only"]
+	c.Assert(ok, Equals, true)
+	c.Check(t1.A[0].([]interface{}), DeepEquals, []interface{}{"10.0.0.1", 100})
+	c.Check(t1.A[1].([]interface{}), DeepEquals, []interface{}{"10.0.0.4", 100})
 
-	// c.Assert(t1, Equals, "10.1.1.10")
+	t1, ok = zd.Data["any-only.north-america"]
+	c.Assert(ok, Equals, true)
+	c.Check(t1.A[0].([]interface{}), DeepEquals, []interface{}{"10.0.0.1", 10})
+	c.Check(t1.A[1].([]interface{}), DeepEquals, []interface{}{"10.0.0.4", 10})
 
 	js, err := zd.JSON()
 	c.Check(err, IsNil)

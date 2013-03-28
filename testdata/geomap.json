@@ -2,7 +2,7 @@
 
   "default": [ "@=100"],
 
-  "*.any":  [ "@" ],
+  "*.any":  [ "@", "north-america=10" ],
   "*.sin":  [ "sg", "th", "id", "my" ],
   "*.ams*": [ "europe", "nl", "fr" ],
   "*.lhr":  [ "europe=1000", "uk" ],
