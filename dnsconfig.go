@@ -17,6 +17,7 @@ var (
 	zonesFile       = flag.String("config", "config/zones.json", "zones.json configuration file")
 	outputDir       = flag.String("output", "dns", "output directory")
 	showVersionFlag = flag.Bool("version", false, "Show dnsconfig version")
+	Verbose         = flag.Bool("verbose", false, "verbose output")
 )
 
 func init() {

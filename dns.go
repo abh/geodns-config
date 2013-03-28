@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"sort"
 )
@@ -72,6 +73,8 @@ func (z *Zone) BuildZone() (*zoneJson, error) {
 		js.Data[""].Ns[ns] = ""
 	}
 
+	displayQueue := make([]string, 0)
+
 	for _, labelData := range z.Labels.All() {
 		if len(labelData.GroupName) > 0 {
 			log.Println("Groups not implemented yet, skipping ", labelData.Name)
@@ -108,9 +111,18 @@ func (z *Zone) BuildZone() (*zoneJson, error) {
 
 				trg := []interface{}{ip.String(), geo.weight}
 				js.Data[geoName].A = append(js.Data[geoName].A, trg)
+
+				fn := func(slice []string, s string) []string {
+					for _, e := range slice {
+						if e == s {
+							return slice
+						}
+					}
+					return append(slice, s)
+				}
+				displayQueue = fn(displayQueue, geoName)
 			}
 		}
-
 		if d, ok := js.Data[labelData.Name]; ok {
 			if len(d.A) == 0 {
 				log.Println("No global A records for", labelData.Name)
@@ -118,9 +130,29 @@ func (z *Zone) BuildZone() (*zoneJson, error) {
 		} else {
 			log.Println("No global A records for", labelData.Name)
 		}
+		displayQueue = append(displayQueue, "")
 	}
 
 	js.Data.sortRecords()
+
+	if *Verbose {
+		for _, geoName := range displayQueue {
+			if geoName == "" {
+				fmt.Println("")
+				continue
+			}
+			fmt.Printf("%-40s: ", geoName)
+			for i, a := range js.Data[geoName].A {
+				// fmt.Printf("%#v\n%s\n", a, spew.Sdump(a))
+				fmt.Printf("%-15s/%-4d", a.([]interface{})[0].(string), a.([]interface{})[1].(int))
+				if i == len(js.Data[geoName].A)-1 {
+					fmt.Printf("\n")
+				} else {
+					fmt.Printf(" | ")
+				}
+			}
+		}
+	}
 
 	return &js, nil
 }
