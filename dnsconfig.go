@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -9,11 +10,13 @@ import (
 )
 
 var VERSION string = "2.0.0"
+var buildTime string
 var gitVersion string
 
 var (
-	zonesFile = flag.String("config", "config/zones.json", "zones.json configuration file")
-	outputDir = flag.String("output", "dns", "output directory")
+	zonesFile       = flag.String("config", "config/zones.json", "zones.json configuration file")
+	outputDir       = flag.String("output", "dns", "output directory")
+	showVersionFlag = flag.Bool("version", false, "Show dnsconfig version")
 )
 
 func init() {
@@ -28,6 +31,11 @@ func init() {
 func main() {
 
 	flag.Parse()
+
+	if *showVersionFlag {
+		fmt.Println("dnsconfig", VERSION, buildTime)
+		os.Exit(0)
+	}
 
 	zones := new(Zones)
 
