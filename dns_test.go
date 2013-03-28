@@ -51,3 +51,19 @@ func (s *LabelsSuite) TestDnsLoad(c *C) {
 	c.Check(err, IsNil)
 	c.Check(len(js) > 0, Equals, true)
 }
+
+func (s *LabelsSuite) TestDnsSort(c *C) {
+	zd := zoneData{}
+	l := new(zoneLabel)
+	zd["test"] = l
+
+	l.A = make([]interface{}, 4)
+	l.A[0] = []interface{}{"20.2.1.4", 200}
+	l.A[1] = []interface{}{"20.50.1.4", 300}
+	l.A[2] = []interface{}{"1.2.3.4", 190}
+	l.A[3] = []interface{}{"10.2.3.4", 150}
+
+	zd.sortRecords()
+
+	c.Check(l.A, DeepEquals, jsonAddresses{[]interface{}{"1.2.3.4", 190}, []interface{}{"10.2.3.4", 150}, []interface{}{"20.2.1.4", 200}, []interface{}{"20.50.1.4", 300}})
+}

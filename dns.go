@@ -3,7 +3,10 @@ package main
 import (
 	"encoding/json"
 	"log"
+	"sort"
 )
+
+type zoneData map[string]*zoneLabel
 
 type zoneJson struct {
 	Data     zoneData `json:"data"`
@@ -11,15 +14,23 @@ type zoneJson struct {
 	MaxHosts int      `json:"max_hosts"`
 }
 
+type jsonAddresses []interface{}
+
 type zoneLabel struct {
 	Ns    map[string]string `json:"ns,omitempty"`
 	Cname string            `json:"cname,omitempty"`
 	Alias string            `json:"alias,omitempty"`
-	A     []interface{}     `json:"a,omitempty"`
-	Aaaa  []interface{}     `json:"aaaa,omitempty"`
+	A     jsonAddresses     `json:"a,omitempty"`
+	Aaaa  jsonAddresses     `json:"aaaa,omitempty"`
 }
 
-type zoneData map[string]*zoneLabel
+func (a jsonAddresses) Less(i, j int) bool {
+	// Really this should sort on thee IP address bytes, but this is good enough
+	// as we just need something to make them be in a consistent order
+	return a[i].([]interface{})[0].(string) < a[j].([]interface{})[0].(string)
+}
+func (s jsonAddresses) Len() int      { return len(s) }
+func (s jsonAddresses) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
 
 func (z *Zone) BuildJSON() (string, error) {
 	zd, err := z.BuildZone()
@@ -39,6 +50,12 @@ func (js *zoneJson) JSON() (string, error) {
 		return "", err
 	}
 	return string(b), nil
+}
+
+func (jd *zoneData) sortRecords() {
+	for _, v := range *jd {
+		sort.Sort(v.A)
+	}
 }
 
 func (z *Zone) BuildZone() (*zoneJson, error) {
@@ -102,6 +119,8 @@ func (z *Zone) BuildZone() (*zoneJson, error) {
 			log.Println("No global A records for", labelData.Name)
 		}
 	}
+
+	js.Data.sortRecords()
 
 	return &js, nil
 }
