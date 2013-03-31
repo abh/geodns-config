@@ -1,0 +1,6 @@
+
+REVISION=`git rev-parse --short=5  HEAD`
+echo $REVISION > REVISION
+BUILDTIME=`date "+%Y-%m-%d_%H:%M:%S"`
+
+#BUILDFLAGS=

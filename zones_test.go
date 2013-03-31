@@ -1,4 +1,4 @@
-package main
+package dnsconfig
 
 import (
 	"github.com/davecgh/go-spew/spew"

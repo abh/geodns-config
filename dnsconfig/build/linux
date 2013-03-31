@@ -1,0 +1,20 @@
+#!/bin/bash
+
+TMP=/tmp/dnsconfig/.tmp.$$
+TAR=dnsconfig-linux-amd64.tar.gz
+
+. build/setup
+
+CGO_ENABLED=0 \
+GOOS=linux \
+GOARCH=amd64 \
+go install \
+   -ldflags -X\ main.gitVersion\ $REVISION\ -X\ main.buildTime\ $BUILDTIME \
+   -installsuffix .linux-amd64 && \
+mkdir -p $TMP/dnsconfig/bin && \
+cp ../../bin/linux_amd64/* $TMP/dnsconfig/bin/ && \
+tar -c -C $TMP -vzf $TAR dnsconfig && \
+mv $TAR ~/Dropbox/Public/geodns/dnsconfig/ && \
+echo http://geodns.bitnames.com/dnsconfig/$TAR &&\
+
+rm -fr $TMP

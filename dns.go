@@ -1,4 +1,4 @@
-package main
+package dnsconfig
 
 import (
 	"encoding/json"
@@ -135,7 +135,7 @@ func (z *Zone) BuildZone() (*zoneJson, error) {
 
 	js.Data.sortRecords()
 
-	if *Verbose {
+	if z.Verbose {
 		for _, geoName := range displayQueue {
 			if geoName == "" {
 				fmt.Println("")

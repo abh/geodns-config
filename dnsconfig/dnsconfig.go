@@ -3,13 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/devel/dnsconfig"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 )
 
-var VERSION string = "2.0.0"
+var VERSION string = "2.1.0"
 var buildTime string
 var gitVersion string
 
@@ -29,27 +30,13 @@ func init() {
 	log.SetFlags(log.Lmicroseconds | log.Lshortfile)
 }
 
-func main() {
-
-	flag.Parse()
-
-	if *showVersionFlag {
-		fmt.Println("dnsconfig", VERSION, buildTime)
-		os.Exit(0)
-	}
-
-	zones := new(Zones)
-
-	err := zones.LoadZonesConfig(*zonesFile)
-	if err != nil {
-		log.Printf("Could not open '%s': %s", *zonesFile, err)
-		os.Exit(2)
-	}
+func BuildAll(zones *dnsconfig.Zones) {
 
 	for _, zone := range zones.All() {
 
 		log.Printf("Building %s\n", zone.Name)
-		err = zone.LoadConfig()
+		err := zone.LoadConfig()
+		zone.Verbose = *Verbose
 		if err != nil {
 			log.Printf("Could not load configuration for '%s': %s", zone.Name, err)
 			continue
@@ -68,5 +55,25 @@ func main() {
 			continue
 		}
 	}
+}
+
+func main() {
+
+	flag.Parse()
+
+	if *showVersionFlag {
+		fmt.Println("dnsconfig", VERSION, buildTime)
+		os.Exit(0)
+	}
+
+	zones := new(dnsconfig.Zones)
+
+	err := zones.LoadZonesConfig(*zonesFile)
+	if err != nil {
+		log.Printf("Could not open '%s': %s", *zonesFile, err)
+		os.Exit(2)
+	}
+
+	BuildAll(zones)
 
 }

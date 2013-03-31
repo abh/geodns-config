@@ -1,0 +1,5 @@
+#!/bin/bash
+
+. ./build/setup
+
+go build -ldflags "-X main.gitVersion $REVISION -X main.buildTime $BUILDTIME"

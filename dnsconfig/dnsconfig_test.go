@@ -1,4 +1,4 @@
-package dnsconfig
+package main
 
 import (
 	. "launchpad.net/gocheck"

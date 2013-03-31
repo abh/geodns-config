@@ -1,4 +1,4 @@
-package main
+package dnsconfig
 
 import (
 	"fmt"
@@ -22,6 +22,7 @@ type Zone struct {
 	LabelsFile string
 	NodesFile  string
 	GeoMapFile string
+	Verbose    bool
 }
 
 type ZoneOptions struct {
