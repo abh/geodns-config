@@ -15,6 +15,7 @@ type Zones struct {
 type Zone struct {
 	Name       string
 	Options    ZoneOptions
+	Logging    ZoneLogging
 	Ns         []string
 	Labels     Labels
 	Nodes      Nodes
@@ -127,6 +128,15 @@ func (zs *Zones) LoadZonesConfig(fileName string) error {
 					zone.NodesFile = absPath(fileName, v.(string))
 				case "geomap":
 					zone.GeoMapFile = absPath(fileName, v.(string))
+
+				case "logging":
+					m := v.(map[string]interface{})
+					if o, ok := m["stathat"]; ok {
+						zone.Logging.StatHat = o.(bool)
+					}
+					if o, ok := m["stathat_api"]; ok {
+						zone.Logging.StatHatAPI = o.(string)
+					}
 
 				default:
 					log.Printf("Unknown option '%s' for zone '%s'\n", key, zoneName)

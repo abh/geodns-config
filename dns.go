@@ -7,12 +7,18 @@ import (
 	"sort"
 )
 
+type ZoneLogging struct {
+	StatHat    bool   `json:"stathat"`
+	StatHatAPI string `json:"stathat_api"`
+}
+
 type zoneData map[string]*zoneLabel
 
 type zoneJson struct {
-	Data     zoneData `json:"data"`
-	Ttl      int      `json:"ttl"`
-	MaxHosts int      `json:"max_hosts"`
+	Data     zoneData    `json:"data"`
+	Ttl      int         `json:"ttl"`
+	MaxHosts int         `json:"max_hosts"`
+	Logging  ZoneLogging `json:"logging"`
 }
 
 type jsonAddresses []interface{}
@@ -66,6 +72,7 @@ func (z *Zone) BuildZone() (*zoneJson, error) {
 
 	js.MaxHosts = z.Options.MaxHosts
 	js.Ttl = z.Options.Ttl
+	js.Logging = z.Logging
 
 	js.Data[""] = new(zoneLabel)
 	js.Data[""].Ns = map[string]string{}
@@ -98,7 +105,11 @@ func (z *Zone) BuildZone() (*zoneJson, error) {
 				if geo.target == "@" {
 					geoName = labelData.Name
 				} else {
-					geoName = labelData.Name + "." + geo.target
+					if len(labelData.Name) > 0 {
+						geoName = labelData.Name + "." + geo.target
+					} else {
+						geoName = geo.target
+					}
 				}
 				if _, ok := js.Data[geoName]; !ok {
 					js.Data[geoName] = new(zoneLabel)

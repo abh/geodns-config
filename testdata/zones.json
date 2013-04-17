@@ -10,6 +10,9 @@
   },
   "z.example.com": {
     "contact": "noc-z@example.com",
-    "max_hosts": 2
+    "max_hosts": 2,
+    "logging": {
+      "stathat_api": "abc-123"
+    }
   }
 }
