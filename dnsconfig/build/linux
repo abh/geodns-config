@@ -9,8 +9,7 @@ CGO_ENABLED=0 \
 GOOS=linux \
 GOARCH=amd64 \
 go install \
-   -ldflags -X\ main.gitVersion\ $REVISION\ -X\ main.buildTime\ $BUILDTIME \
-   -installsuffix .linux-amd64 && \
+   -ldflags -X\ main.gitVersion\ $REVISION\ -X\ main.buildTime\ $BUILDTIME && \
 mkdir -p $TMP/dnsconfig/bin && \
 cp $GOPATH/bin/linux_amd64/* $TMP/dnsconfig/bin/ && \
 tar -c -C $TMP -vzf $TAR dnsconfig && \
