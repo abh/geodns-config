@@ -14,7 +14,7 @@ The `dnsconfig` tool helps create configuration/zone files for the
 
 By default `config/zones.json`. You can specify another with the `-config` parameter.
 
-	{
+    {
         "some.example.com": {
                 "contact": "noc@example.com",
                 "ttl":     120,
@@ -24,7 +24,7 @@ By default `config/zones.json`. You can specify another with the `-config` param
                 "nodes":   "nodes.json",
                 "geomap":  "geomap.json"
         }
-	}
+    }
 
 The options are:
 
@@ -45,13 +45,13 @@ to zero will remove this node from the output data.
 The IP address is a default to be used when the server is used in a DNS reply,
 it can be overridden in the labels file.
 
-	{
+    {
      "edge01.any": { "ip": "10.0.0.1", "active": 1 },
      "edge04.any": { "ip": "10.0.0.4", "active": 1 },
 
      "edge01.lax": { "ip": "10.0.1.1", "active": 1 },
      "edge01.sea": { "ip": "10.0.2.1", "active": 0 }
-	}
+    }
 
 ### Geomap
 
@@ -67,14 +67,14 @@ returned in answers more often. The default weight is 100.
 The "key" in the data structure can have wildcards ("*") matching any non-dot
 character. To match "foo.bar" you can use "*.bar", "foo.*" or "*.*".
 
-	{
-		"*.any": [ "@" ],
-		"*.sin": [ "sg", "th", "id", "my" ],
-		"*.ams": [ "europe", "nl", "fr" ],
-		"*.lhr": [ "europe=1000", "uk" ],
-		"*.sea": [ "us" ],
-		"flex04.ams04": [ "europe=1" ]
-	}
+    {
+        "*.any": [ "@" ],
+        "*.sin": [ "sg", "th", "id", "my" ],
+        "*.ams": [ "europe", "nl", "fr" ],
+        "*.lhr": [ "europe=1000", "uk" ],
+        "*.sea": [ "us" ],
+        "flex04.ams04": [ "europe=1" ]
+    }
 
 ### Labels
 
