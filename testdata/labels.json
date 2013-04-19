@@ -7,5 +7,6 @@
         "edge01.ams": "",
         "edge01.any": ""
     },
-    "any-only":   { "edge01.any": "", "edge04.any": "" }
+    "any-only":   { "edge01.any": "", "edge04.any": "" },
+    "any-alias":  { "group": "any-only" }
 }

@@ -84,7 +84,9 @@ func (z *Zone) BuildZone() (*zoneJson, error) {
 
 	for _, labelData := range z.Labels.All() {
 		if len(labelData.GroupName) > 0 {
-			log.Println("Groups not implemented yet, skipping ", labelData.Name)
+			label := new(zoneLabel)
+			label.Alias = labelData.GroupName
+			js.Data[labelData.Name] = label
 			continue
 		}
 		for _, labelNode := range labelData.LabelNodes {

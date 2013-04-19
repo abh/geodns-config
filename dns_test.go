@@ -53,6 +53,10 @@ func (s *LabelsSuite) TestDnsLoad(c *C) {
 	c.Check(t1.A[0].([]interface{}), DeepEquals, []interface{}{"10.0.0.1", 10})
 	c.Check(t1.A[1].([]interface{}), DeepEquals, []interface{}{"10.0.0.4", 10})
 
+	t1, ok = zd.Data["any-alias"]
+	c.Assert(ok, Equals, true)
+	c.Check(t1.Alias, Equals, "any-only")
+
 	js, err := zd.JSON()
 	c.Check(err, IsNil)
 	c.Check(len(js) > 0, Equals, true)

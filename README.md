@@ -82,9 +82,14 @@ Labels are 'host names' in the zone. The value for each key is a hash with node
 names (must match an entry in the nodes config) and an optional IP override.
 
     {
-      "some.example": { "edge01.any": "", "flex01.sin": "" },
-      "another.test": { "edge01.any": "10.1.1.10", "flex01.sin": "10.20.1.10", "edge01.lhr": "" },
-      "zone4": { "edge01.sea": "", "edge01.any": "" }
+        "some.example":  { "edge01.any": "", "flex01.sin": "" },
+        "alias.example": { "group": "some.example" },
+        "another.test": {
+            "edge01.any": "10.1.1.10",
+            "flex01.sin": "10.20.1.10",
+            "edge01.lhr": ""
+        },
+        "zone4": { "edge01.sea": "", "edge01.any": "" }
     }
 
 ## Copyright
