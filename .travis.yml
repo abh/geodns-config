@@ -1,2 +1,10 @@
 language: go
 
+install:
+  - go get -d -v ./...
+  - go get launchpad.net/gocheck
+  - go get github.com/davecgh/go-spew/spew
+
+script:
+  - cd $TRAVIS_BUILD_DIR && go test -gocheck.v
+  - go test -gocheck.v -gocheck.b -gocheck.btime=2s
