@@ -8,6 +8,11 @@ TAR=dnsconfig-linux-amd64.tar.gz
 CGO_ENABLED=0 \
 GOOS=linux \
 GOARCH=amd64 \
+go clean -r
+
+CGO_ENABLED=0 \
+GOOS=linux \
+GOARCH=amd64 \
 go install \
    -ldflags -X\ main.gitVersion\ $REVISION\ -X\ main.buildTime\ $BUILDTIME && \
 mkdir -p $TMP/dnsconfig/bin && \
