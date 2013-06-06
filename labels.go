@@ -8,6 +8,7 @@ import (
 
 type labelsMap map[string]*Label
 
+// Labels map hostnames to nodes or groups
 type Labels struct {
 	labels labelsMap
 	mutex  sync.Mutex
@@ -15,21 +16,24 @@ type Labels struct {
 
 type labelNode struct {
 	Name string
-	Ip   net.IP
+	IP   net.IP
 }
 
+// Label has a name (hostname) and either a group name or a map of nodes
 type Label struct {
 	Name       string
 	LabelNodes map[string]labelNode
 	GroupName  string
 }
 
+// NewLabels return a new Labels struct
 func NewLabels() Labels {
 	ls := Labels{}
 	ls.Clear()
 	return ls
 }
 
+// All returns a slice of the labels
 func (ls *Labels) All() (r []*Label) {
 
 	ls.mutex.Lock()
@@ -41,12 +45,14 @@ func (ls *Labels) All() (r []*Label) {
 	return
 }
 
+// Clear resets the labels map
 func (ls *Labels) Clear() {
 	ls.mutex.Lock()
 	defer ls.mutex.Unlock()
 	ls.labels = labelsMap{}
 }
 
+// SetGroup sets the label to be a particular group
 func (ls *Labels) SetGroup(name, groupName string) {
 	ls.mutex.Lock()
 	defer ls.mutex.Unlock()
@@ -58,6 +64,7 @@ func (ls *Labels) SetGroup(name, groupName string) {
 	label.GroupName = groupName
 }
 
+// SetNode adds a node to a label
 func (ls *Labels) SetNode(name string, node labelNode) {
 	ls.mutex.Lock()
 	defer ls.mutex.Unlock()
@@ -71,6 +78,7 @@ func (ls *Labels) SetNode(name string, node labelNode) {
 
 }
 
+// Get returns a named label
 func (ls *Labels) Get(name string) *Label {
 	ls.mutex.Lock()
 	defer ls.mutex.Unlock()
@@ -80,12 +88,15 @@ func (ls *Labels) Get(name string) *Label {
 	return nil
 }
 
+// Count returns the number of labels
 func (ls *Labels) Count() int {
 	ls.mutex.Lock()
 	defer ls.mutex.Unlock()
 	return len(ls.labels)
 }
 
+// LoadFile loads a labels.json file into the data structure. It is not currently
+// cleared first.
 func (ls *Labels) LoadFile(fileName string) error {
 
 	objmap := make(objMap)
@@ -112,7 +123,7 @@ func (ls *Labels) LoadFile(fileName string) error {
 						return fmt.Errorf("Invalid IP address for '%s'/'%s': %s", name, labelName, labelTarget)
 					}
 				}
-				node := labelNode{Name: labelName, Ip: ip}
+				node := labelNode{Name: labelName, IP: ip}
 				newLabels.SetNode(name, node)
 			}
 		}

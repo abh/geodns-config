@@ -117,7 +117,7 @@ func (z *Zone) BuildZone() (*zoneJson, error) {
 					js.Data[geoName] = new(zoneLabel)
 				}
 
-				ip := labelNode.Ip
+				ip := labelNode.IP
 				if ip == nil {
 					ip = node.Ip
 				}
