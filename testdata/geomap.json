@@ -7,5 +7,6 @@
   "*.ams*": [ "europe", "nl", "fr" ],
   "*.lhr":  [ "europe=1000", "uk" ],
   "*.sea":  [ "us", "@" ],
+  "*.jfk":  [ "us", "@" ],
   "flex04.ams04": [ "europe=1" ]
 }

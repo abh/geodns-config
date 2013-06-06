@@ -40,8 +40,12 @@ func (s *LabelsSuite) TestDnsLoad(c *C) {
 	t1, ok = zd.Data["zone4"]
 	c.Assert(ok, Equals, true)
 
+	t1, ok = zd.Data["zone4"]
+	c.Assert(ok, Equals, true)
+
 	t1, ok = zd.Data["zone4.us"]
-	c.Assert(ok, Equals, false) // edge01.sea is inactive
+	// edge01.sea is inactive and edge01.jfk disabled for this label
+	c.Assert(ok, Equals, false)
 
 	t1, ok = zd.Data["any-only"]
 	c.Assert(ok, Equals, true)

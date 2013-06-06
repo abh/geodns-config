@@ -90,13 +90,19 @@ func (z *Zone) BuildZone() (*zoneJson, error) {
 			continue
 		}
 		for _, labelNode := range labelData.LabelNodes {
+
+			if labelNode.Active == false {
+				log.Printf("Node '%s' is inactive in label '%s'\n", labelNode.Name, labelData.Name)
+				continue
+			}
+
 			node := z.Nodes.Get(labelNode.Name)
 			if node == nil {
 				log.Printf("Node '%s' not configured in master nodes config\n", labelNode.Name)
 				continue
 			}
 			if node.Active == false {
-				log.Printf("Node '%s' is inactive for label '%s'\n", labelNode.Name, labelData.Name)
+				log.Printf("Node '%s' is inactive (used in '%s')\n", labelNode.Name, labelData.Name)
 				continue
 			}
 

@@ -81,15 +81,26 @@ character. To match "foo.bar" you can use "*.bar", "foo.*" or "*.*".
 Labels are 'host names' in the zone. The value for each key is a hash with node
 names (must match an entry in the nodes config) and an optional IP override.
 
+The override can also be another hash with the elements 'active' (defaults to true)
+and 'ip' (optional). 'active' can be specified as true, 1, false or 0.
+
     {
-        "some.example":  { "edge01.any": "", "flex01.sin": "" },
-        "alias.example": { "group": "some.example" },
+        "some.example":  {
+            "edge01.any": "",
+            "flex01.sin": ""
+        },
+        "alias.example": {
+            "group": "some.example"
+        },
         "another.test": {
             "edge01.any": "10.1.1.10",
             "flex01.sin": "10.20.1.10",
             "edge01.lhr": ""
         },
-        "zone4": { "edge01.sea": "", "edge01.any": "" }
+        "zone4": {
+            "edge01.sea": { "active": true, ip: "10.1.2.3" },
+            "edge01.any": { "active": 0 }
+        }
     }
 
 ## Copyright

@@ -15,8 +15,9 @@ type Labels struct {
 }
 
 type labelNode struct {
-	Name string
-	IP   net.IP
+	Name   string
+	Active bool
+	IP     net.IP
 }
 
 // Label has a name (hostname) and either a group name or a map of nodes
@@ -114,16 +115,38 @@ func (ls *Labels) LoadFile(fileName string) error {
 					continue
 				}
 
-				var ip net.IP
+				node := labelNode{Name: labelName, Active: true}
 
-				if len(labelTarget.(string)) > 0 {
-					ip = net.ParseIP(labelTarget.(string))
+				var ipStr string
 
-					if ip == nil {
-						return fmt.Errorf("Invalid IP address for '%s'/'%s': %s", name, labelName, labelTarget)
+				switch labelTarget.(type) {
+				case string:
+					ipStr = labelTarget.(string)
+				case map[string]interface{}:
+					v := labelTarget.(map[string]interface{})
+					if ipV, ok := v["ip"]; ok {
+						ipStr = ipV.(string)
 					}
+					if activeV, ok := v["active"]; ok {
+						active, err := toBool(activeV)
+						node.Active = active
+						if err != nil {
+							fmt.Errorf("Invalid active flag for '%s'/'%s': %s", name, labelName, active)
+						}
+					}
+
+				default:
+					return fmt.Errorf("Invalid value type for '%s'/%s': %T (%#v)", name, labelName, labelTarget, labelTarget)
 				}
-				node := labelNode{Name: labelName, IP: ip}
+
+				if len(ipStr) > 0 {
+					ip := net.ParseIP(ipStr)
+					if ip == nil {
+						return fmt.Errorf("Invalid IP address for '%s'/'%s': %s", name, labelName, ipStr)
+					}
+					node.IP = ip
+				}
+
 				newLabels.SetNode(name, node)
 			}
 		}

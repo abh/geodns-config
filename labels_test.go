@@ -33,5 +33,9 @@ func (s *LabelsSuite) TestLoad(c *C) {
 	c.Assert(s.Labels.Get("zone2.example").LabelNodes["edge01.any"].Name, Equals, "edge01.any")
 	c.Assert(s.Labels.Get("zone2.example").LabelNodes["edge01.any"].IP.String(), Equals, "10.1.1.10")
 	c.Assert(s.Labels.Get("zone3.example").LabelNodes["edge01.any"].IP, IsNil)
+	c.Assert(s.Labels.Get("zone3.example").LabelNodes["edge01.any"].Active, Equals, true)
+
+	c.Assert(s.Labels.Get("zone4").LabelNodes["edge01.any"].Active, Equals, true)
+	c.Assert(s.Labels.Get("zone4").LabelNodes["edge01.jfk"].Active, Equals, false)
 
 }
