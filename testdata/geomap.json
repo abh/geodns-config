@@ -8,5 +8,6 @@
   "*.lhr":  [ "europe=1000", "uk" ],
   "*.sea":  [ "us", "@" ],
   "*.jfk":  [ "us", "@" ],
+  "edge04.chi": [],
   "flex04.ams04": [ "europe=1" ]
 }

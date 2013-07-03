@@ -101,12 +101,14 @@ func (z *Zone) BuildZone() (*zoneJson, error) {
 				log.Printf("Node '%s' not configured in master nodes config\n", labelNode.Name)
 				continue
 			}
-			if node.Active == false {
+
+			geos := z.GeoMap.GetNodeGeos(labelNode.Name)
+
+			// Don't warn if there are no targets for the inactive node
+			if node.Active == false && len(geos) > 0 {
 				log.Printf("Node '%s' is inactive (used in '%s')\n", labelNode.Name, labelData.Name)
 				continue
 			}
-
-			geos := z.GeoMap.GetNodeGeos(labelNode.Name)
 
 			for _, geo := range geos {
 				var geoName string

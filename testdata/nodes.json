@@ -13,6 +13,7 @@
      "edge04.jfk": { "ip": "10.0.3.4", "active": "1" },
      "edge04.ams": { "ip": "10.0.4.4", "active": "1" },
      "edge04.lhr": { "ip": "10.0.5.4", "active": "1" },
+     "edge04.chi": { "ip": "10.0.6.4", "active": "0" },
 
      "flex01.sin": { "ip": "10.0.9.1", "active": 1 },
      "flex04.ams04": { "ip": "10.0.4.44", "active": "1" }

@@ -6,7 +6,8 @@
         "flex04.ams04": "",
         "edge01.ams": "",
         "edge01.any": "",
-        "edge01.jfk": { "active": 0 }
+        "edge01.jfk": { "active": 0 },
+        "edge04.chi": {}
     },
     "any-only":   { "edge01.any": "", "edge04.any": "" },
     "any-alias":  { "group": "any-only" }
