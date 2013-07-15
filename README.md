@@ -3,6 +3,10 @@
 The `dnsconfig` tool helps create configuration/zone files for the
 [GeoDNS](http://geo.bitnames.com/) server.
 
+It'll take a less verbose JSON configuration and expand it to GeoDNS
+format. The format also helps reusing certain bits of configuration
+so changes can be done in fewer places (active IPs, for example).
+
 ## Command line options
 
 * -config: name of the zones config file. Defaults to `./config/zones.json`.
@@ -10,7 +14,17 @@ The `dnsconfig` tool helps create configuration/zone files for the
 
 ## Configuration files
 
+* `zones`: Master list of zones to generate.
+* `nodes`: List of servers.
+* `geomap`: Mapping servers to 'geo targets'.
+* `labels`: Labels (hostnames) to insert into the zone.
+
 ### Zones
+
+The `zones.json` file manages the list of zones to be generated. It references the
+other three configuration files which then can be re-used for each zone or be
+unique as appropriate.
+
 
 By default `config/zones.json`. You can specify another with the `-config` parameter.
 
@@ -84,6 +98,8 @@ names (must match an entry in the nodes config) and an optional IP override.
 The override can also be another hash with the elements 'active' (defaults to true)
 and 'ip' (optional). 'active' can be specified as true, 1, false or 0.
 
+Only A records are currently supported.
+
     {
         "some.example":  {
             "edge01.any": "",
@@ -105,4 +121,4 @@ and 'ip' (optional). 'active' can be specified as true, 1, false or 0.
 
 ## Copyright
 
-Copyright 2013 Ask Bjørn Hansen
+Copyright 2013 Ask Bjørn Hansen.
