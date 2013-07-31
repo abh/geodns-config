@@ -1,9 +1,9 @@
 package dnsconfig
 
 import (
-	"camlistore.org/pkg/errorutil"
 	"encoding/json"
 	"fmt"
+	"github.com/abh/errorutil"
 	"log"
 	"os"
 	"strconv"
