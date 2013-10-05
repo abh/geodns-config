@@ -16,7 +16,7 @@ GOARCH=amd64 \
 go install -a \
    -ldflags -X\ main.gitVersion\ $REVISION\ -X\ main.buildTime\ $BUILDTIME && \
 mkdir -p $TMP/dnsconfig/bin && \
-cp $GOPATH/bin/linux_amd64/* $TMP/dnsconfig/bin/ && \
+cp $GOPATH/bin/linux_amd64/dnsconfig $TMP/dnsconfig/bin/ && \
 tar -c -C $TMP -vzf $TAR dnsconfig && \
 mv $TAR ~/Dropbox/Public/geodns/dnsconfig/ && \
 echo http://geodns.bitnames.com/dnsconfig/$TAR &&\
