@@ -27,10 +27,11 @@ type Zone struct {
 }
 
 type ZoneOptions struct {
-	Serial   int
-	Ttl      int
-	MaxHosts int
-	Contact  string
+	Serial    int
+	Ttl       int
+	MaxHosts  int
+	Targeting string
+	Contact   string
 }
 
 func (z *Zone) LoadConfig() error {
@@ -128,6 +129,9 @@ func (zs *Zones) LoadZonesConfig(fileName string) error {
 					zone.NodesFile = absPath(fileName, v.(string))
 				case "geomap":
 					zone.GeoMapFile = absPath(fileName, v.(string))
+
+				case "targeting":
+					zone.Options.Targeting = v.(string)
 
 				case "logging":
 					m := v.(map[string]interface{})

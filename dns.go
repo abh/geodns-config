@@ -15,10 +15,11 @@ type ZoneLogging struct {
 type zoneData map[string]*zoneLabel
 
 type zoneJson struct {
-	Data     zoneData    `json:"data"`
-	Ttl      int         `json:"ttl"`
-	MaxHosts int         `json:"max_hosts"`
-	Logging  ZoneLogging `json:"logging"`
+	Data      zoneData    `json:"data"`
+	Ttl       int         `json:"ttl"`
+	MaxHosts  int         `json:"max_hosts,omitempty"`
+	Logging   ZoneLogging `json:"logging,omitempty"`
+	Targeting string      `json:"targeting,omitempty"`
 }
 
 type jsonAddresses []interface{}
@@ -73,6 +74,7 @@ func (z *Zone) BuildZone() (*zoneJson, error) {
 	js.MaxHosts = z.Options.MaxHosts
 	js.Ttl = z.Options.Ttl
 	js.Logging = z.Logging
+	js.Targeting = z.Options.Targeting
 
 	js.Data[""] = new(zoneLabel)
 	js.Data[""].Ns = map[string]string{}

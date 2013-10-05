@@ -28,6 +28,7 @@ func (s *LabelsSuite) TestZonesLoad(c *C) {
 	c.Assert(ok, Equals, true)
 	c.Check(z.Name, Equals, "x.example.com")
 	c.Check(z.Options.Ttl, Equals, 120) // Configured TTL
+	c.Check(z.Options.Targeting, Equals, "@ country")
 
 	c.Check(z.Ns, DeepEquals, []string{"ns1.example.com", "ns2.example.com"})
 

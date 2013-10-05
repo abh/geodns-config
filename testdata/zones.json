@@ -4,6 +4,7 @@
     "contact": "noc-x@example.com",
     "max_hosts": 3,
     "ns": ["ns1.example.com", "ns2.example.com"],
+    "targeting": "@ country",
     "labels": "labels.json",
     "nodes": "nodes.json",
     "geomap": "geomap.json"

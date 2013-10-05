@@ -46,6 +46,7 @@ The options are:
 * ttl: Time-to-live configuration for the DNS replies (in seconds).
 * max_hosts: Maximum number of IPs to return in each reply.
 * ns: List of nameservers for the zone.
+* targeting: Targeting options for GeoDNS (for example "region regiongroup country continent @", the default is "country continent @").
 * labels, nodes and geomap: Filename for data configuration (see below). The filenames are relative to the location of the zone configuration.
 
 Multiple zones can be specified in the file.
