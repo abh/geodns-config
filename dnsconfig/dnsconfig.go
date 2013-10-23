@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/ant0ine/go-json-rest"
-	"github.com/devel/geodns-config"
+	"github.com/abh/geodns-config"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 
