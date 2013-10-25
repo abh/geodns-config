@@ -82,12 +82,16 @@ returned in answers more often. The default weight is 100.
 The "key" in the data structure can have wildcards ("*") matching any non-dot
 character. To match "foo.bar" you can use "*.bar", "foo.*" or "*.*".
 
+If a key starts with "^" and/or ends with "$" the string will just be used
+straight as a regular expression.
+
     {
         "*.any": [ "@" ],
         "*.sin": [ "sg", "th", "id", "my" ],
         "*.ams": [ "europe", "nl", "fr" ],
         "*.lhr": [ "europe=1000", "uk" ],
         "*.sea": [ "us" ],
+        "^hat-server.*": [ "au"],
         "flex04.ams04": [ "europe=1" ]
     }
 
