@@ -23,8 +23,30 @@ type labelNode struct {
 // Label has a name (hostname) and either a group name or a map of nodes
 type Label struct {
 	Name       string
-	LabelNodes map[string]labelNode
+	labelNodes map[string]labelNode
 	GroupName  string
+}
+
+// Get all nodes for a label
+func (l *Label) GetNodes() []labelNode {
+	lbls := make([]labelNode, 0)
+	for _, lbl := range l.labelNodes {
+		lbls = append(lbls, lbl)
+	}
+	return lbls
+}
+
+func (l *Label) GetNode(name string) *labelNode {
+	lbl := l.labelNodes[name]
+	if lbl.Name != "" {
+		return &lbl
+	}
+	for nodeName, node := range l.labelNodes {
+		if matchWildcard(nodeName, name) {
+			return &labelNode{Name: name, Active: node.Active, IP: node.IP}
+		}
+	}
+	return nil
 }
 
 // NewLabels return a new Labels struct
@@ -59,7 +81,7 @@ func (ls *Labels) SetGroup(name, groupName string) {
 	defer ls.mutex.Unlock()
 	label, ok := ls.labels[name]
 	if !ok {
-		label = &Label{Name: name, LabelNodes: make(map[string]labelNode)}
+		label = &Label{Name: name, labelNodes: make(map[string]labelNode)}
 		ls.labels[name] = label
 	}
 	label.GroupName = groupName
@@ -71,11 +93,11 @@ func (ls *Labels) SetNode(name string, node labelNode) {
 	defer ls.mutex.Unlock()
 	label, ok := ls.labels[name]
 	if !ok {
-		label = &Label{Name: name, LabelNodes: make(map[string]labelNode)}
+		label = &Label{Name: name, labelNodes: make(map[string]labelNode)}
 		ls.labels[name] = label
 	}
 
-	label.LabelNodes[node.Name] = node
+	label.labelNodes[node.Name] = node
 
 }
 
@@ -114,6 +136,8 @@ func (ls *Labels) LoadFile(fileName string) error {
 					newLabels.SetGroup(name, labelTarget.(string))
 					continue
 				}
+
+				// fmt.Printf("labelName '%s', labelTarget '%#v'\n", labelName, labelTarget)
 
 				node := labelNode{Name: labelName, Active: true}
 

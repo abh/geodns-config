@@ -30,12 +30,23 @@ func (s *LabelsSuite) TestLoad(c *C) {
 	c.Assert(err, IsNil)
 
 	c.Assert(s.Labels.Get("zone1.example").GroupName, Equals, "edge1-global")
-	c.Assert(s.Labels.Get("zone2.example").LabelNodes["edge01.any"].Name, Equals, "edge01.any")
-	c.Assert(s.Labels.Get("zone2.example").LabelNodes["edge01.any"].IP.String(), Equals, "10.1.1.10")
-	c.Assert(s.Labels.Get("zone3.example").LabelNodes["edge01.any"].IP, IsNil)
-	c.Assert(s.Labels.Get("zone3.example").LabelNodes["edge01.any"].Active, Equals, true)
+	c.Assert(s.Labels.Get("zone2.example").GetNode("edge01.any").Name, Equals, "edge01.any")
+	c.Assert(s.Labels.Get("zone2.example").GetNode("edge01.any").IP.String(), Equals, "10.1.1.10")
+	c.Assert(s.Labels.Get("zone3.example").GetNode("edge01.any").IP, IsNil)
+	c.Assert(s.Labels.Get("zone3.example").GetNode("edge01.any").Active, Equals, true)
 
-	c.Assert(s.Labels.Get("zone4").LabelNodes["edge01.any"].Active, Equals, true)
-	c.Assert(s.Labels.Get("zone4").LabelNodes["edge01.jfk"].Active, Equals, false)
+	c.Assert(s.Labels.Get("zone4").GetNode("edge01.any").Active, Equals, true)
+	c.Assert(s.Labels.Get("zone4").GetNode("edge01.jfk").Active, Equals, false)
+
+	// wildcards
+	node := s.Labels.Get("match").GetNode("edge01.jfk")
+	c.Assert(node, NotNil)
+	c.Check(node.Name, Equals, "edge01.jfk")
+	c.Check(node.Active, Equals, true)
+
+	node = s.Labels.Get("match-inactive").GetNode("edge01.jfk")
+	c.Assert(node, NotNil)
+	c.Check(node.Name, Equals, "edge01.jfk")
+	c.Check(node.Active, Equals, false)
 
 }

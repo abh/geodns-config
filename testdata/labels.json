@@ -9,6 +9,8 @@
         "edge01.jfk": { "active": 0 },
         "edge04.chi": {}
     },
+    "match": { "edge01.*": {} },
+    "match-inactive": { "edge01.*": {"active": false} },
     "any-only":   { "edge01.any": "", "edge04.any": "" },
     "any-alias":  { "group": "any-only" }
 }

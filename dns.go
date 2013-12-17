@@ -91,7 +91,7 @@ func (z *Zone) BuildZone() (*zoneJson, error) {
 			js.Data[labelData.Name] = label
 			continue
 		}
-		for _, labelNode := range labelData.LabelNodes {
+		for _, labelNode := range labelData.GetNodes() {
 
 			if labelNode.Active == false {
 				log.Printf("Node '%s' is inactive in label '%s'\n", labelNode.Name, labelData.Name)
