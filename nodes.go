@@ -17,6 +17,7 @@ type Nodes struct {
 type Node struct {
 	Name   string
 	Ip     net.IP
+	Cname  string
 	Active bool
 }
 
@@ -85,14 +86,22 @@ func (ns *Nodes) LoadFile(fileName string) error {
 				return err
 			}
 
-			ipStr := data["ip"].(string)
+			var cname string
+			var ip net.IP
 
-			ip := net.ParseIP(ipStr)
-			if ip == nil {
-				return fmt.Errorf("Invalid IP address %s for node '%s'", ipStr, name)
+			if cnameIf, ok := data["cname"]; ok {
+				cname = cnameIf.(string)
+			} else {
+
+				ipStr := data["ip"].(string)
+
+				ip = net.ParseIP(ipStr)
+				if ip == nil {
+					return fmt.Errorf("Invalid IP address %s for node '%s'", ipStr, name)
+				}
 			}
 
-			node := &Node{Ip: ip, Active: active}
+			node := &Node{Cname: cname, Ip: ip, Active: active}
 
 			nodes[name] = node
 			// log.Printf("%#v\n", node)

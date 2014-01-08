@@ -32,9 +32,13 @@ func (s *LabelsSuite) TestLoad(c *C) {
 	c.Assert(s.Labels.Get("zone1.example").GroupName, Equals, "edge1-global")
 	c.Assert(s.Labels.Get("zone2.example").GetNode("edge01.any").Name, Equals, "edge01.any")
 	c.Assert(s.Labels.Get("zone2.example").GetNode("edge01.any").IP.String(), Equals, "10.1.1.10")
+
 	c.Assert(s.Labels.Get("zone3.example").GetNode("edge01.any").IP, IsNil)
 	c.Assert(s.Labels.Get("zone3.example").GetNode("edge01.any").Active, Equals, true)
+	c.Assert(s.Labels.Get("zone3.example").GetNode("cname-one").Cname, Equals, "one-override.example.com")
+	c.Assert(s.Labels.Get("zone3.example").GetNode("cname-one").Active, Equals, true)
 
+	c.Assert(s.Labels.Get("zone3.example").GetNode("edge01.any").IP, IsNil)
 	c.Assert(s.Labels.Get("zone4").GetNode("edge01.any").Active, Equals, true)
 	c.Assert(s.Labels.Get("zone4").GetNode("edge01.jfk").Active, Equals, false)
 

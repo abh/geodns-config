@@ -26,7 +26,7 @@ type jsonAddresses []interface{}
 
 type zoneLabel struct {
 	Ns    map[string]string `json:"ns,omitempty"`
-	Cname string            `json:"cname,omitempty"`
+	Cname jsonAddresses     `json:"cname,omitempty"`
 	Alias string            `json:"alias,omitempty"`
 	A     jsonAddresses     `json:"a,omitempty"`
 	Aaaa  jsonAddresses     `json:"aaaa,omitempty"`
@@ -127,13 +127,22 @@ func (z *Zone) BuildZone() (*zoneJson, error) {
 					js.Data[geoName] = new(zoneLabel)
 				}
 
-				ip := labelNode.IP
-				if ip == nil {
-					ip = node.Ip
+				cname := labelNode.Cname
+				if len(cname) == 0 {
+					cname = node.Cname
 				}
+				if len(cname) > 0 {
+					trg := []interface{}{cname, geo.weight}
+					js.Data[geoName].Cname = append(js.Data[geoName].Cname, trg)
+				} else {
+					ip := labelNode.IP
+					if ip == nil {
+						ip = node.Ip
+					}
 
-				trg := []interface{}{ip.String(), geo.weight}
-				js.Data[geoName].A = append(js.Data[geoName].A, trg)
+					trg := []interface{}{ip.String(), geo.weight}
+					js.Data[geoName].A = append(js.Data[geoName].A, trg)
+				}
 
 				fn := func(slice []string, s string) []string {
 					for _, e := range slice {
@@ -147,11 +156,11 @@ func (z *Zone) BuildZone() (*zoneJson, error) {
 			}
 		}
 		if d, ok := js.Data[labelData.Name]; ok {
-			if len(d.A) == 0 {
-				log.Println("No global A records for", labelData.Name)
+			if len(d.A) == 0 && len(d.Cname) == 0 {
+				log.Println("No global data for", labelData.Name)
 			}
 		} else {
-			log.Println("No global A records for", labelData.Name)
+			log.Println("No global data for", labelData.Name)
 		}
 		displayQueue = append(displayQueue, "")
 	}
@@ -165,13 +174,19 @@ func (z *Zone) BuildZone() (*zoneJson, error) {
 				continue
 			}
 			fmt.Printf("%-40s: ", geoName)
-			for i, a := range js.Data[geoName].A {
-				// fmt.Printf("%#v\n%s\n", a, spew.Sdump(a))
-				fmt.Printf("%-15s/%-4d", a.([]interface{})[0].(string), a.([]interface{})[1].(int))
-				if i == len(js.Data[geoName].A)-1 {
-					fmt.Printf("\n")
-				} else {
-					fmt.Printf(" | ")
+
+			if len(js.Data[geoName].Cname) > 0 {
+				fmt.Printf("%s\n", js.Data[geoName].Cname)
+			} else {
+
+				for i, a := range js.Data[geoName].A {
+					// fmt.Printf("%#v\n%s\n", a, spew.Sdump(a))
+					fmt.Printf("%-15s/%-4d", a.([]interface{})[0].(string), a.([]interface{})[1].(int))
+					if i == len(js.Data[geoName].A)-1 {
+						fmt.Printf("\n")
+					} else {
+						fmt.Printf(" | ")
+					}
 				}
 			}
 		}

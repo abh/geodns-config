@@ -18,6 +18,7 @@ type labelNode struct {
 	Name   string
 	Active bool
 	IP     net.IP
+	Cname  string
 }
 
 // Label has a name (hostname) and either a group name or a map of nodes
@@ -43,7 +44,7 @@ func (l *Label) GetNode(name string) *labelNode {
 	}
 	for nodeName, node := range l.labelNodes {
 		if matchWildcard(nodeName, name) {
-			return &labelNode{Name: name, Active: node.Active, IP: node.IP}
+			return &labelNode{Name: name, Active: node.Active, IP: node.IP, Cname: node.Cname}
 		}
 	}
 	return nil
@@ -150,6 +151,9 @@ func (ls *Labels) LoadFile(fileName string) error {
 					v := labelTarget.(map[string]interface{})
 					if ipV, ok := v["ip"]; ok {
 						ipStr = ipV.(string)
+					}
+					if cnameV, ok := v["cname"]; ok {
+						node.Cname = cnameV.(string)
 					}
 					if activeV, ok := v["active"]; ok {
 						active, err := toBool(activeV)

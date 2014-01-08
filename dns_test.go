@@ -5,20 +5,25 @@ import (
 )
 
 type DnsSuite struct {
+	zone *Zone
 }
 
 var _ = Suite(&DnsSuite{})
 
 func (s *DnsSuite) SetUpSuite(c *C) {
-}
-
-func (s *LabelsSuite) TestDnsLoad(c *C) {
 	z := new(Zone)
 	z.Name = "example.com"
 	z.Options.Ttl = 25
 	z.Labels.LoadFile("testdata/labels.json")
 	z.GeoMap.LoadFile("testdata/geomap.json")
 	z.Nodes.LoadFile("testdata/nodes.json")
+
+	s.zone = z
+}
+
+func (s *DnsSuite) TestDnsLoad(c *C) {
+
+	z := s.zone
 
 	zd, err := z.BuildZone()
 	c.Assert(err, IsNil)
@@ -66,7 +71,29 @@ func (s *LabelsSuite) TestDnsLoad(c *C) {
 	c.Check(len(js) > 0, Equals, true)
 }
 
-func (s *LabelsSuite) TestDnsSort(c *C) {
+func (s *DnsSuite) TestCname(c *C) {
+
+	z := s.zone
+
+	zd, err := z.BuildZone()
+	c.Assert(err, IsNil)
+
+	t1, ok := zd.Data["zone3.example.dk"]
+	c.Assert(ok, Equals, true)
+	c.Check(t1.Cname[0], DeepEquals, []interface{}{"one-override.example.com", 100})
+
+	t1, ok = zd.Data["zone3.example.se"]
+	c.Assert(ok, Equals, true)
+	c.Check(t1.Cname[0], DeepEquals, []interface{}{"two.example.com", 100})
+
+	t1, ok = zd.Data["zone3.example.no"]
+	c.Assert(ok, Equals, true)
+	c.Check(t1.Cname[0], DeepEquals, []interface{}{"one-override.example.com", 2})
+	c.Check(t1.Cname[1], DeepEquals, []interface{}{"two.example.com", 1})
+
+}
+
+func (s *DnsSuite) TestDnsSort(c *C) {
 	zd := zoneData{}
 	l := new(zoneLabel)
 	zd["test"] = l

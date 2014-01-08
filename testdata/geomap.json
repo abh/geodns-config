@@ -8,6 +8,10 @@
   "*.lhr":  [ "europe=1000", "uk" ],
   "*.sea":  [ "us", "@" ],
   "*.jfk":  [ "us", "@" ],
+
+  "cname-one": ["dk","no=2"],
+  "cname-two": ["se","no=1"],
+
   "edge04.chi": [],
   "flex04.ams04": [ "europe=1" ]
 }

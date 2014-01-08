@@ -19,6 +19,7 @@ func (s *NodesSuite) TestNodes(c *C) {
 	s.Nodes.Clear()
 	s.Nodes.Set("foo", Node{Ip: net.ParseIP("10.0.0.1"), Active: true})
 	c.Assert(s.Nodes.Count(), Equals, 1)
+
 	node := s.Nodes.Get("foo")
 	c.Assert(node, NotNil)
 	c.Assert(node.Name, Equals, "foo")
@@ -37,5 +38,13 @@ func (s *NodesSuite) TestLoad(c *C) {
 	node = s.Nodes.Get("edge01.sea")
 	c.Assert(node, NotNil)
 	c.Assert(node.Active, Equals, false)
+
+	node = s.Nodes.Get("cname-chain")
+	c.Assert(node, NotNil)
+	c.Assert(node.Active, Equals, true)
+	c.Assert(node.Cname, Equals, "hello.example.com")
+
+	// not sure this is the appropriate data, but it's what's implemented so make it explicit
+	c.Check(node.Ip, IsNil)
 
 }
