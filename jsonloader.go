@@ -43,6 +43,8 @@ func toInt(i interface{}) (int, error) {
 		return strconv.Atoi(i.(string))
 	case float64:
 		return int(i.(float64)), nil
+	case nil:
+		return 0, nil
 	}
 	return 0, fmt.Errorf("Unknown type %T", i)
 }
