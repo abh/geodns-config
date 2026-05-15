@@ -16,5 +16,8 @@
     "match": { "edge01.*": {} },
     "match-inactive": { "edge01.*": {"active": false} },
     "any-only":   { "edge01.any": "", "edge04.any": "" },
-    "any-alias":  { "group": "any-only" }
+    "any-alias":  { "group": "any-only" },
+    "v6-only":    { "edge06.v6": "" },
+    "dual-stack": { "edge06.dual": "", "edge06.v6": "" },
+    "v6-override":{ "edge01.any": "2001:db8::101" }
 }

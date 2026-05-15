@@ -103,7 +103,8 @@ names (must match an entry in the nodes config) and an optional IP override.
 The override can also be another hash with the elements 'active' (defaults to true)
 and 'ip' (optional). 'active' can be specified as true, 1, false or 0.
 
-Only A records are currently supported.
+A and AAAA records are supported. IPv4 addresses (and IPv4-mapped IPv6
+addresses) are emitted as A records; other IPv6 addresses as AAAA records.
 
     {
         "some.example":  {

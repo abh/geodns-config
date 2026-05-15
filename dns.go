@@ -63,6 +63,7 @@ func (js *zoneJson) JSON() (string, error) {
 func (jd *zoneData) sortRecords() {
 	for _, v := range *jd {
 		sort.Sort(v.A)
+		sort.Sort(v.Aaaa)
 	}
 }
 
@@ -141,7 +142,11 @@ func (z *Zone) BuildZone() (*zoneJson, error) {
 					}
 
 					trg := []interface{}{ip.String(), geo.weight}
-					js.Data[geoName].A = append(js.Data[geoName].A, trg)
+					if ip.Is4() || ip.Is4In6() {
+						js.Data[geoName].A = append(js.Data[geoName].A, trg)
+					} else {
+						js.Data[geoName].Aaaa = append(js.Data[geoName].Aaaa, trg)
+					}
 				}
 
 				fn := func(slice []string, s string) []string {
@@ -156,7 +161,7 @@ func (z *Zone) BuildZone() (*zoneJson, error) {
 			}
 		}
 		if d, ok := js.Data[labelData.Name]; ok {
-			if len(d.A) == 0 && len(d.Cname) == 0 {
+			if len(d.A) == 0 && len(d.Aaaa) == 0 && len(d.Cname) == 0 {
 				log.Println("No global data for", labelData.Name)
 			}
 		} else {
@@ -178,10 +183,11 @@ func (z *Zone) BuildZone() (*zoneJson, error) {
 			if len(js.Data[geoName].Cname) > 0 {
 				fmt.Printf("%s\n", js.Data[geoName].Cname)
 			} else {
-				for i, a := range js.Data[geoName].A {
-					// fmt.Printf("%#v\n%s\n", a, spew.Sdump(a))
-					fmt.Printf("%-15s/%-4d", a.([]interface{})[0].(string), a.([]interface{})[1].(int))
-					if i == len(js.Data[geoName].A)-1 {
+				addrs := append(jsonAddresses{}, js.Data[geoName].A...)
+				addrs = append(addrs, js.Data[geoName].Aaaa...)
+				for i, a := range addrs {
+					fmt.Printf("%-39s/%-4d", a.([]interface{})[0].(string), a.([]interface{})[1].(int))
+					if i == len(addrs)-1 {
 						fmt.Printf("\n")
 					} else {
 						fmt.Printf(" | ")

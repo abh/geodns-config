@@ -19,7 +19,9 @@
      "cname-two": { "cname": "two.example.com", "active": "1" },
 
      "flex01.sin": { "ip": "10.0.9.1", "active": 1 },
-     "flex04.ams04": { "ip": "10.0.4.44", "active": "1" }
+     "flex04.ams04": { "ip": "10.0.4.44", "active": "1" },
 
+     "edge06.v6":  { "ip": "2001:db8::6", "active": "1" },
+     "edge06.dual":{ "ip": "10.0.6.6", "active": "1" }
 }
 

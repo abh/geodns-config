@@ -13,5 +13,8 @@
   "cname-two": ["se","no=1"],
 
   "edge04.chi": [],
-  "flex04.ams04": [ "europe=1" ]
+  "flex04.ams04": [ "europe=1" ],
+
+  "edge06.v6":  [ "@" ],
+  "edge06.dual":[ "@" ]
 }

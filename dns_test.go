@@ -22,7 +22,6 @@ func (s *DnsSuite) SetUpSuite(c *C) {
 }
 
 func (s *DnsSuite) TestDnsLoad(c *C) {
-
 	z := s.zone
 
 	zd, err := z.BuildZone()
@@ -71,8 +70,33 @@ func (s *DnsSuite) TestDnsLoad(c *C) {
 	c.Check(len(js) > 0, Equals, true)
 }
 
-func (s *DnsSuite) TestCname(c *C) {
+func (s *DnsSuite) TestAaaa(c *C) {
+	z := s.zone
 
+	zd, err := z.BuildZone()
+	c.Assert(err, IsNil)
+
+	// IPv6-only node lands in Aaaa, not A
+	t1, ok := zd.Data["v6-only"]
+	c.Assert(ok, Equals, true)
+	c.Check(len(t1.A), Equals, 0)
+	c.Check(t1.Aaaa[0].([]interface{}), DeepEquals, []interface{}{"2001:db8::6", 100})
+
+	// Dual-stack label has both A and AAAA records
+	t1, ok = zd.Data["dual-stack"]
+	c.Assert(ok, Equals, true)
+	c.Check(t1.A[0].([]interface{}), DeepEquals, []interface{}{"10.0.6.6", 100})
+	c.Check(t1.Aaaa[0].([]interface{}), DeepEquals, []interface{}{"2001:db8::6", 100})
+
+	// IP override with an IPv6 address routes to Aaaa even when the
+	// node default is IPv4
+	t1, ok = zd.Data["v6-override"]
+	c.Assert(ok, Equals, true)
+	c.Check(len(t1.A), Equals, 0)
+	c.Check(t1.Aaaa[0].([]interface{}), DeepEquals, []interface{}{"2001:db8::101", 100})
+}
+
+func (s *DnsSuite) TestCname(c *C) {
 	z := s.zone
 
 	zd, err := z.BuildZone()
@@ -90,7 +114,6 @@ func (s *DnsSuite) TestCname(c *C) {
 	c.Assert(ok, Equals, true)
 	c.Check(t1.Cname[0], DeepEquals, []interface{}{"one-override.example.com", 2})
 	c.Check(t1.Cname[1], DeepEquals, []interface{}{"two.example.com", 1})
-
 }
 
 func (s *DnsSuite) TestDnsSort(c *C) {
