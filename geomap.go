@@ -3,6 +3,7 @@ package dnsconfig
 import (
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -81,40 +82,32 @@ func (gm *GeoMap) GetNodeGeos(node string) []*GeoTarget {
 }
 
 func (gm *GeoMap) LoadFile(fileName string) error {
-	objmap := make(map[string]interface{})
+	var raw map[string][]string
+	if err := loadJSONFile(fileName, &raw); err != nil {
+		return err
+	}
 
-	return jsonLoader(fileName, objmap, func() error {
-		gm.mutex.Lock()
-		defer gm.mutex.Unlock()
-
-		geomap := geoTargetMap{}
-
-		for name, v := range objmap {
-			if _, ok := geomap[name]; !ok {
-				geomap[name] = make([]*GeoTarget, 0)
-			}
-
-			for _, g := range v.([]interface{}) {
-				gSplit := strings.Split(g.(string), "=")
-
-				weight := 100
-				if len(gSplit) > 1 {
-					var err error
-					weight, err = toInt(gSplit[1])
-					if err != nil {
-						return fmt.Errorf("bad weight '%s' for geo '%s'/'%s': %w", gSplit[1], name, gSplit[0], err)
-					}
+	geomap := geoTargetMap{}
+	for name, targets := range raw {
+		list := make(geoTargetList, 0, len(targets))
+		for _, g := range targets {
+			target, weightStr, hasWeight := strings.Cut(g, "=")
+			weight := 100
+			if hasWeight {
+				w, err := strconv.Atoi(weightStr)
+				if err != nil {
+					return fmt.Errorf("bad weight '%s' for geo '%s'/'%s': %w", weightStr, name, target, err)
 				}
-
-				geo := GeoTarget{target: gSplit[0], weight: weight}
-				geomap[name] = append(geomap[name], &geo)
+				weight = w
 			}
-
-			geomap[name].Sort()
+			list = append(list, &GeoTarget{target: target, weight: weight})
 		}
+		list.Sort()
+		geomap[name] = list
+	}
 
-		gm.geomap = geomap
-
-		return nil
-	})
+	gm.mutex.Lock()
+	defer gm.mutex.Unlock()
+	gm.geomap = geomap
+	return nil
 }

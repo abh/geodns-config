@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/netip"
 	"slices"
-	"sort"
+	"strings"
 )
 
 type ZoneLogging struct {
@@ -33,13 +34,19 @@ type zoneLabel struct {
 	Aaaa  jsonAddresses     `json:"aaaa,omitempty"`
 }
 
-func (a jsonAddresses) Less(i, j int) bool {
-	// Really this should sort on thee IP address bytes, but this is good enough
-	// as we just need something to make them be in a consistent order
-	return a[i].([]interface{})[0].(string) < a[j].([]interface{})[0].(string)
+func recordString(r interface{}) string {
+	return r.([]interface{})[0].(string)
 }
-func (s jsonAddresses) Len() int      { return len(s) }
-func (s jsonAddresses) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+
+func compareIP(a, b interface{}) int {
+	aAddr, _ := netip.ParseAddr(recordString(a))
+	bAddr, _ := netip.ParseAddr(recordString(b))
+	return aAddr.Compare(bAddr)
+}
+
+func compareString(a, b interface{}) int {
+	return strings.Compare(recordString(a), recordString(b))
+}
 
 func (z *Zone) BuildJSON() (string, error) {
 	zd, err := z.BuildZone()
@@ -63,9 +70,9 @@ func (js *zoneJson) JSON() (string, error) {
 
 func (jd *zoneData) sortRecords() {
 	for _, v := range *jd {
-		sort.Sort(v.A)
-		sort.Sort(v.Aaaa)
-		sort.Sort(v.Cname)
+		slices.SortFunc(v.A, compareIP)
+		slices.SortFunc(v.Aaaa, compareIP)
+		slices.SortFunc(v.Cname, compareString)
 	}
 }
 

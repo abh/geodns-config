@@ -1,6 +1,8 @@
 package dnsconfig
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/netip"
 	"sync"
@@ -117,67 +119,82 @@ func (ls *Labels) Count() int {
 	return len(ls.labels)
 }
 
-// LoadFile loads a labels.json file into the data structure. It is not currently
-// cleared first.
-func (ls *Labels) LoadFile(fileName string) error {
-	objmap := make(objMap)
+// labelEntry accepts either an IP string shorthand ("10.1.2.3") or
+// an object {ip, cname, active}.
+type labelEntry struct {
+	IP     string    `json:"ip"`
+	Cname  string    `json:"cname"`
+	Active *flexBool `json:"active"`
+}
 
-	return jsonLoader(fileName, objmap, func() error {
-		newLabels := NewLabels()
+func (e *labelEntry) UnmarshalJSON(data []byte) error {
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) > 0 && trimmed[0] == '"' {
+		return json.Unmarshal(data, &e.IP)
+	}
+	type alias labelEntry
+	return json.Unmarshal(data, (*alias)(e))
+}
 
-		for name, v := range objmap {
-			data := v.(map[string]interface{})
+// labelDoc decodes one label: an optional "group" alias plus zero or
+// more node-name entries.
+type labelDoc struct {
+	Group string
+	Nodes map[string]labelEntry
+}
 
-			for labelName, labelTarget := range data {
-
-				if labelName == "group" {
-					newLabels.SetGroup(name, labelTarget.(string))
-					continue
-				}
-
-				node := labelNode{Name: labelName, Active: true}
-
-				var ipStr string
-
-				switch labelTarget.(type) {
-				case string:
-					ipStr = labelTarget.(string)
-				case map[string]interface{}:
-					v := labelTarget.(map[string]interface{})
-					if ipV, ok := v["ip"]; ok {
-						ipStr = ipV.(string)
-					}
-					if cnameV, ok := v["cname"]; ok {
-						node.Cname = cnameV.(string)
-					}
-					if activeV, ok := v["active"]; ok {
-						active, err := toBool(activeV)
-						if err != nil {
-							return fmt.Errorf("Invalid active flag for '%s'/'%s': %w", name, labelName, err)
-						}
-						node.Active = active
-					}
-
-				default:
-					return fmt.Errorf("Invalid value type for '%s'/%s': %T (%#v)", name, labelName, labelTarget, labelTarget)
-				}
-
-				if len(ipStr) > 0 {
-					ip, err := netip.ParseAddr(ipStr)
-					if err != nil {
-						return fmt.Errorf("Invalid IP address for '%s'/'%s': %s: %w", name, labelName, ipStr, err)
-					}
-					node.IP = ip
-				}
-
-				newLabels.SetNode(name, node)
+func (d *labelDoc) UnmarshalJSON(data []byte) error {
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+	d.Nodes = make(map[string]labelEntry, len(raw))
+	for k, v := range raw {
+		if k == "group" {
+			if err := json.Unmarshal(v, &d.Group); err != nil {
+				return fmt.Errorf("invalid group: %w", err)
 			}
+			continue
 		}
+		var entry labelEntry
+		if err := json.Unmarshal(v, &entry); err != nil {
+			return fmt.Errorf("invalid entry '%s': %w", k, err)
+		}
+		d.Nodes[k] = entry
+	}
+	return nil
+}
 
-		ls.mutex.Lock()
-		defer ls.mutex.Unlock()
-		ls.labels = newLabels.labels
+// LoadFile loads a labels.json file, replacing any existing labels.
+func (ls *Labels) LoadFile(fileName string) error {
+	var raw map[string]labelDoc
+	if err := loadJSONFile(fileName, &raw); err != nil {
+		return err
+	}
 
-		return nil
-	})
+	newLabels := NewLabels()
+	for labelName, doc := range raw {
+		if doc.Group != "" {
+			newLabels.SetGroup(labelName, doc.Group)
+		}
+		for nodeName, entry := range doc.Nodes {
+			node := labelNode{Name: nodeName, Active: true, Cname: entry.Cname}
+			if entry.Active != nil {
+				node.Active = bool(*entry.Active)
+			}
+			if entry.IP != "" {
+				ip, err := netip.ParseAddr(entry.IP)
+				if err != nil {
+					return fmt.Errorf("invalid IP address for '%s'/'%s': %s: %w", labelName, nodeName, entry.IP, err)
+				}
+				node.IP = ip
+			}
+			newLabels.SetNode(labelName, node)
+		}
+	}
+
+	ls.mutex.Lock()
+	defer ls.mutex.Unlock()
+	ls.labels = newLabels.labels
+	return nil
 }

@@ -1,6 +1,7 @@
 package dnsconfig
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"path/filepath"
@@ -60,94 +61,92 @@ func (zs *Zones) All() (r []*Zone) {
 	return
 }
 
+type zoneJSON struct {
+	TTL       flexInt     `json:"ttl"`
+	Serial    flexInt     `json:"serial"`
+	Contact   string      `json:"contact"`
+	MaxHosts  flexInt     `json:"max_hosts"`
+	NS        []string    `json:"ns"`
+	Labels    string      `json:"labels"`
+	Nodes     string      `json:"nodes"`
+	GeoMap    string      `json:"geomap"`
+	Targeting string      `json:"targeting"`
+	Logging   loggingJSON `json:"logging"`
+}
+
+type loggingJSON struct {
+	StatHat    bool   `json:"stathat"`
+	StatHatAPI string `json:"stathat_api"`
+}
+
+var validZoneKeys = map[string]bool{
+	"ttl": true, "serial": true, "contact": true, "max_hosts": true,
+	"ns": true, "labels": true, "nodes": true, "geomap": true,
+	"targeting": true, "logging": true,
+}
+
 func (zs *Zones) LoadZonesConfig(fileName string) error {
-	objmap := objMap{}
+	var raw map[string]json.RawMessage
+	if err := loadJSONFile(fileName, &raw); err != nil {
+		return err
+	}
 
-	return jsonLoader(fileName, objmap, func() error {
-		zs.mutex.Lock()
-		defer zs.mutex.Unlock()
+	zs.mutex.Lock()
+	defer zs.mutex.Unlock()
+	if zs.zones == nil {
+		zs.zones = map[string]*Zone{}
+	}
 
-		if zs.zones == nil {
-			zs.zones = map[string]*Zone{}
+	for zoneName, rawZone := range raw {
+		var keys map[string]json.RawMessage
+		if err := json.Unmarshal(rawZone, &keys); err != nil {
+			return fmt.Errorf("invalid zone '%s': %w", zoneName, err)
 		}
 
-		for zoneName, zoneData := range objmap {
-			var zone *Zone
+		zone, ok := zs.zones[zoneName]
+		if !ok {
+			zone = &Zone{Name: zoneName, Options: ZoneOptions{Ttl: 300, Contact: "hostmaster"}}
+			zs.zones[zoneName] = zone
+		}
 
-			if zone2, ok := zs.zones[zoneName]; ok {
-				zone = zone2
-			} else {
-				zone = new(Zone)
-				zs.zones[zoneName] = zone
-				zone.Name = zoneName
-				zone.Options.Ttl = 300
-				zone.Options.Contact = "hostmaster"
-			}
+		// Pre-seed with current values; absent JSON keys leave them untouched.
+		data := zoneJSON{
+			TTL:       flexInt(zone.Options.Ttl),
+			Serial:    flexInt(zone.Options.Serial),
+			Contact:   zone.Options.Contact,
+			MaxHosts:  flexInt(zone.Options.MaxHosts),
+			NS:        zone.Ns,
+			Targeting: zone.Options.Targeting,
+			Logging:   loggingJSON(zone.Logging),
+		}
+		if err := json.Unmarshal(rawZone, &data); err != nil {
+			return fmt.Errorf("invalid zone '%s': %w", zoneName, err)
+		}
 
-			zoneOptions := zoneData.(map[string]interface{})
-
-			for key, v := range zoneOptions {
-				switch key {
-				case "ttl":
-					i, err := toInt(v)
-					if err != nil {
-						return fmt.Errorf("Invalid integer '%s' in '%s' option: %s", v, key, err)
-					}
-					zone.Options.Ttl = i
-				case "serial":
-					i, err := toInt(v)
-					if err != nil {
-						return fmt.Errorf("Invalid integer '%s' in '%s' option: %s", v, key, err)
-					}
-					zone.Options.Serial = i
-				case "contact":
-					zone.Options.Contact = v.(string)
-				case "max_hosts":
-					i, err := toInt(v)
-					if err != nil {
-						return fmt.Errorf("Invalid integer '%s' in '%s' option: %s", v, key, err)
-					}
-					zone.Options.MaxHosts = i
-				case "ns":
-					switch v.(type) {
-					case []interface{}:
-						nsList := v.([]interface{})
-						ns := make([]string, len(nsList))
-						for i, v := range nsList {
-							ns[i] = v.(string)
-						}
-						zone.Ns = ns
-					default:
-						return fmt.Errorf("Bad ns parameter for '%s'\n", zoneName)
-					}
-
-				case "labels":
-					zone.LabelsFile = absPath(fileName, v.(string))
-				case "nodes":
-					zone.NodesFile = absPath(fileName, v.(string))
-				case "geomap":
-					zone.GeoMapFile = absPath(fileName, v.(string))
-
-				case "targeting":
-					zone.Options.Targeting = v.(string)
-
-				case "logging":
-					m := v.(map[string]interface{})
-					if o, ok := m["stathat"]; ok {
-						zone.Logging.StatHat = o.(bool)
-					}
-					if o, ok := m["stathat_api"]; ok {
-						zone.Logging.StatHatAPI = o.(string)
-					}
-
-				default:
-					log.Printf("Unknown option '%s' for zone '%s'\n", key, zoneName)
-				}
+		for k := range keys {
+			if !validZoneKeys[k] {
+				log.Printf("Unknown option '%s' for zone '%s'\n", k, zoneName)
 			}
 		}
 
-		return nil
-	})
+		zone.Options.Ttl = int(data.TTL)
+		zone.Options.Serial = int(data.Serial)
+		zone.Options.Contact = data.Contact
+		zone.Options.MaxHosts = int(data.MaxHosts)
+		zone.Options.Targeting = data.Targeting
+		zone.Logging = ZoneLogging(data.Logging)
+		zone.Ns = data.NS
+		if data.Labels != "" {
+			zone.LabelsFile = absPath(fileName, data.Labels)
+		}
+		if data.Nodes != "" {
+			zone.NodesFile = absPath(fileName, data.Nodes)
+		}
+		if data.GeoMap != "" {
+			zone.GeoMapFile = absPath(fileName, data.GeoMap)
+		}
+	}
+	return nil
 }
 
 func absPath(baseConfig, fileName string) string {

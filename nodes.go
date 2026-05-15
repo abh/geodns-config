@@ -64,40 +64,33 @@ func (ns *Nodes) Count() int {
 	return len(ns.nodes)
 }
 
+type nodeJSON struct {
+	IP     string   `json:"ip"`
+	Cname  string   `json:"cname"`
+	Active flexBool `json:"active"`
+}
+
 func (ns *Nodes) LoadFile(fileName string) error {
-	objmap := make(objMap)
+	var raw map[string]nodeJSON
+	if err := loadJSONFile(fileName, &raw); err != nil {
+		return err
+	}
 
-	return jsonLoader(fileName, objmap, func() error {
-		ns.mutex.Lock()
-		defer ns.mutex.Unlock()
-
-		nodes := nodesMap{}
-		for name, v := range objmap {
-			data := v.(map[string]interface{})
-
-			active, err := toBool(data["active"])
+	nodes := nodesMap{}
+	for name, data := range raw {
+		node := &Node{Name: name, Cname: data.Cname, Active: bool(data.Active)}
+		if data.Cname == "" {
+			ip, err := netip.ParseAddr(data.IP)
 			if err != nil {
-				return err
+				return fmt.Errorf("invalid IP address %s for node '%s': %w", data.IP, name, err)
 			}
-
-			var cname string
-			var ip netip.Addr
-
-			if cnameIf, ok := data["cname"]; ok {
-				cname = cnameIf.(string)
-			} else {
-				ipStr := data["ip"].(string)
-				ip, err = netip.ParseAddr(ipStr)
-				if err != nil {
-					return fmt.Errorf("invalid IP address %s for node '%s': %w", ipStr, name, err)
-				}
-			}
-
-			nodes[name] = &Node{Cname: cname, IP: ip, Active: active}
+			node.IP = ip
 		}
+		nodes[name] = node
+	}
 
-		ns.nodes = nodes
-
-		return nil
-	})
+	ns.mutex.Lock()
+	defer ns.mutex.Unlock()
+	ns.nodes = nodes
+	return nil
 }

@@ -198,22 +198,48 @@ func TestDnsSort(t *testing.T) {
 	l := new(zoneLabel)
 	zd["test"] = l
 
+	// Inputs chosen so numeric and lexicographic orders disagree:
+	// lex order: 10.x, 192.x, 21.x, 9.x; numeric: 9, 10, 21, 192.
 	l.A = jsonAddresses{
-		[]interface{}{"20.2.1.4", 200},
-		[]interface{}{"20.50.1.4", 300},
-		[]interface{}{"1.2.3.4", 190},
-		[]interface{}{"10.2.3.4", 150},
+		[]interface{}{"192.0.2.1", 100},
+		[]interface{}{"21.0.0.1", 200},
+		[]interface{}{"9.0.0.1", 300},
+		[]interface{}{"10.0.0.1", 400},
+	}
+	l.Aaaa = jsonAddresses{
+		[]interface{}{"2001:db8::20", 100},
+		[]interface{}{"2001:db8::3", 200},
+	}
+	l.Cname = jsonAddresses{
+		[]interface{}{"b.example.com", 100},
+		[]interface{}{"a.example.com", 200},
 	}
 
 	zd.sortRecords()
 
-	want := jsonAddresses{
-		[]interface{}{"1.2.3.4", 190},
-		[]interface{}{"10.2.3.4", 150},
-		[]interface{}{"20.2.1.4", 200},
-		[]interface{}{"20.50.1.4", 300},
+	wantA := jsonAddresses{
+		[]interface{}{"9.0.0.1", 300},
+		[]interface{}{"10.0.0.1", 400},
+		[]interface{}{"21.0.0.1", 200},
+		[]interface{}{"192.0.2.1", 100},
 	}
-	if !reflect.DeepEqual(l.A, want) {
-		t.Errorf("sorted = %v, want %v", l.A, want)
+	if !reflect.DeepEqual(l.A, wantA) {
+		t.Errorf("A sorted = %v, want %v", l.A, wantA)
+	}
+
+	wantAaaa := jsonAddresses{
+		[]interface{}{"2001:db8::3", 200},
+		[]interface{}{"2001:db8::20", 100},
+	}
+	if !reflect.DeepEqual(l.Aaaa, wantAaaa) {
+		t.Errorf("Aaaa sorted = %v, want %v", l.Aaaa, wantAaaa)
+	}
+
+	wantCname := jsonAddresses{
+		[]interface{}{"a.example.com", 200},
+		[]interface{}{"b.example.com", 100},
+	}
+	if !reflect.DeepEqual(l.Cname, wantCname) {
+		t.Errorf("Cname sorted = %v, want %v", l.Cname, wantCname)
 	}
 }

@@ -4,25 +4,32 @@ import (
 	"log"
 	"regexp"
 	"strings"
+	"sync"
 )
 
+var regexCache sync.Map
+
 func matchWildcard(wc, target string) bool {
-	var r string
-	if strings.HasPrefix(wc, "^") || strings.HasSuffix(wc, "$") {
-		r = wc
-	} else {
-		r = strings.Replace(wc, ".", "\\.", -1)
-		r = strings.Replace(r, "+", "\\+", -1)
-		r = strings.Replace(r, "*", "[^\\.]+", -1)
-		r = "^" + r + "$"
+	cached, ok := regexCache.Load(wc)
+	if !ok {
+		re, err := compileWildcard(wc)
+		if err != nil {
+			log.Println("Could not make regexp from", wc, err)
+			return false
+		}
+		cached, _ = regexCache.LoadOrStore(wc, re)
 	}
-	re, err := regexp.Compile(r)
-	if err != nil {
-		log.Println("Could not make regexp from", wc, err)
-		return false
+	return cached.(*regexp.Regexp).MatchString(target)
+}
+
+func compileWildcard(wc string) (*regexp.Regexp, error) {
+	r := wc
+	if !strings.HasPrefix(wc, "^") && !strings.HasSuffix(wc, "$") {
+		parts := strings.Split(wc, "*")
+		for i, p := range parts {
+			parts[i] = regexp.QuoteMeta(p)
+		}
+		r = "^" + strings.Join(parts, `[^.]+`) + "$"
 	}
-	if re.MatchString(target) {
-		return true
-	}
-	return false
+	return regexp.Compile(r)
 }
