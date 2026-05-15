@@ -1,133 +1,219 @@
 package dnsconfig
 
 import (
-	. "launchpad.net/gocheck"
+	"reflect"
+	"testing"
 )
 
-type DnsSuite struct {
-	zone *Zone
-}
-
-var _ = Suite(&DnsSuite{})
-
-func (s *DnsSuite) SetUpSuite(c *C) {
+func newTestZone(t *testing.T) *Zone {
+	t.Helper()
 	z := new(Zone)
 	z.Name = "example.com"
 	z.Options.Ttl = 25
-	z.Labels.LoadFile("testdata/labels.json")
-	z.GeoMap.LoadFile("testdata/geomap.json")
-	z.Nodes.LoadFile("testdata/nodes.json")
-
-	s.zone = z
+	if err := z.Labels.LoadFile("testdata/labels.json"); err != nil {
+		t.Fatalf("Labels.LoadFile: %v", err)
+	}
+	if err := z.GeoMap.LoadFile("testdata/geomap.json"); err != nil {
+		t.Fatalf("GeoMap.LoadFile: %v", err)
+	}
+	if err := z.Nodes.LoadFile("testdata/nodes.json"); err != nil {
+		t.Fatalf("Nodes.LoadFile: %v", err)
+	}
+	return z
 }
 
-func (s *DnsSuite) TestDnsLoad(c *C) {
-	z := s.zone
-
+func TestDnsLoad(t *testing.T) {
+	z := newTestZone(t)
 	zd, err := z.BuildZone()
-	c.Assert(err, IsNil)
+	if err != nil {
+		t.Fatalf("BuildZone: %v", err)
+	}
 
-	c.Check(zd.Ttl, Equals, 25)
+	if zd.Ttl != 25 {
+		t.Errorf("Ttl = %d, want 25", zd.Ttl)
+	}
 
 	t1, ok := zd.Data["zone2.example"]
-	c.Assert(ok, Equals, true)
-	t2 := t1.A[0].([]interface{})
+	if !ok {
+		t.Fatal("zone2.example missing")
+	}
 	// IP override, default weight
-	c.Check(t2, DeepEquals, []interface{}{"10.1.1.10", 100})
+	want := []interface{}{"10.1.1.10", 100}
+	if got := t1.A[0].([]interface{}); !reflect.DeepEqual(got, want) {
+		t.Errorf("zone2.example A[0] = %v, want %v", got, want)
+	}
 
 	t1, ok = zd.Data["zone2.example.europe"]
-	c.Assert(ok, Equals, true)
-	t2 = t1.A[0].([]interface{})
+	if !ok {
+		t.Fatal("zone2.example.europe missing")
+	}
 	// use default IP from nodes.json and weight override
-	c.Check(t2, DeepEquals, []interface{}{"10.0.5.1", 1000})
+	want = []interface{}{"10.0.5.1", 1000}
+	if got := t1.A[0].([]interface{}); !reflect.DeepEqual(got, want) {
+		t.Errorf("zone2.example.europe A[0] = %v, want %v", got, want)
+	}
 
-	t1, ok = zd.Data["zone4"]
-	c.Assert(ok, Equals, true)
+	if _, ok := zd.Data["zone4"]; !ok {
+		t.Error("zone4 missing")
+	}
 
-	t1, ok = zd.Data["zone4"]
-	c.Assert(ok, Equals, true)
-
-	t1, ok = zd.Data["zone4.us"]
 	// edge01.sea is inactive and edge01.jfk disabled for this label
-	c.Assert(ok, Equals, false)
+	if _, ok := zd.Data["zone4.us"]; ok {
+		t.Error("zone4.us should be missing (both us nodes inactive/disabled)")
+	}
 
 	t1, ok = zd.Data["any-only"]
-	c.Assert(ok, Equals, true)
-	c.Check(t1.A[0].([]interface{}), DeepEquals, []interface{}{"10.0.0.1", 100})
-	c.Check(t1.A[1].([]interface{}), DeepEquals, []interface{}{"10.0.0.4", 100})
+	if !ok {
+		t.Fatal("any-only missing")
+	}
+	want = []interface{}{"10.0.0.1", 100}
+	if got := t1.A[0].([]interface{}); !reflect.DeepEqual(got, want) {
+		t.Errorf("any-only A[0] = %v, want %v", got, want)
+	}
+	want = []interface{}{"10.0.0.4", 100}
+	if got := t1.A[1].([]interface{}); !reflect.DeepEqual(got, want) {
+		t.Errorf("any-only A[1] = %v, want %v", got, want)
+	}
 
 	t1, ok = zd.Data["any-only.north-america"]
-	c.Assert(ok, Equals, true)
-	c.Check(t1.A[0].([]interface{}), DeepEquals, []interface{}{"10.0.0.1", 10})
-	c.Check(t1.A[1].([]interface{}), DeepEquals, []interface{}{"10.0.0.4", 10})
+	if !ok {
+		t.Fatal("any-only.north-america missing")
+	}
+	want = []interface{}{"10.0.0.1", 10}
+	if got := t1.A[0].([]interface{}); !reflect.DeepEqual(got, want) {
+		t.Errorf("any-only.north-america A[0] = %v, want %v", got, want)
+	}
+	want = []interface{}{"10.0.0.4", 10}
+	if got := t1.A[1].([]interface{}); !reflect.DeepEqual(got, want) {
+		t.Errorf("any-only.north-america A[1] = %v, want %v", got, want)
+	}
 
 	t1, ok = zd.Data["any-alias"]
-	c.Assert(ok, Equals, true)
-	c.Check(t1.Alias, Equals, "any-only")
+	if !ok {
+		t.Fatal("any-alias missing")
+	}
+	if t1.Alias != "any-only" {
+		t.Errorf("any-alias Alias = %q, want %q", t1.Alias, "any-only")
+	}
 
 	js, err := zd.JSON()
-	c.Check(err, IsNil)
-	c.Check(len(js) > 0, Equals, true)
+	if err != nil {
+		t.Errorf("JSON: %v", err)
+	}
+	if len(js) == 0 {
+		t.Error("JSON returned empty string")
+	}
 }
 
-func (s *DnsSuite) TestAaaa(c *C) {
-	z := s.zone
-
+func TestAaaa(t *testing.T) {
+	z := newTestZone(t)
 	zd, err := z.BuildZone()
-	c.Assert(err, IsNil)
+	if err != nil {
+		t.Fatalf("BuildZone: %v", err)
+	}
 
 	// IPv6-only node lands in Aaaa, not A
 	t1, ok := zd.Data["v6-only"]
-	c.Assert(ok, Equals, true)
-	c.Check(len(t1.A), Equals, 0)
-	c.Check(t1.Aaaa[0].([]interface{}), DeepEquals, []interface{}{"2001:db8::6", 100})
+	if !ok {
+		t.Fatal("v6-only missing")
+	}
+	if got := len(t1.A); got != 0 {
+		t.Errorf("v6-only len(A) = %d, want 0", got)
+	}
+	want := []interface{}{"2001:db8::6", 100}
+	if got := t1.Aaaa[0].([]interface{}); !reflect.DeepEqual(got, want) {
+		t.Errorf("v6-only Aaaa[0] = %v, want %v", got, want)
+	}
 
 	// Dual-stack label has both A and AAAA records
 	t1, ok = zd.Data["dual-stack"]
-	c.Assert(ok, Equals, true)
-	c.Check(t1.A[0].([]interface{}), DeepEquals, []interface{}{"10.0.6.6", 100})
-	c.Check(t1.Aaaa[0].([]interface{}), DeepEquals, []interface{}{"2001:db8::6", 100})
+	if !ok {
+		t.Fatal("dual-stack missing")
+	}
+	want = []interface{}{"10.0.6.6", 100}
+	if got := t1.A[0].([]interface{}); !reflect.DeepEqual(got, want) {
+		t.Errorf("dual-stack A[0] = %v, want %v", got, want)
+	}
+	want = []interface{}{"2001:db8::6", 100}
+	if got := t1.Aaaa[0].([]interface{}); !reflect.DeepEqual(got, want) {
+		t.Errorf("dual-stack Aaaa[0] = %v, want %v", got, want)
+	}
 
 	// IP override with an IPv6 address routes to Aaaa even when the
 	// node default is IPv4
 	t1, ok = zd.Data["v6-override"]
-	c.Assert(ok, Equals, true)
-	c.Check(len(t1.A), Equals, 0)
-	c.Check(t1.Aaaa[0].([]interface{}), DeepEquals, []interface{}{"2001:db8::101", 100})
+	if !ok {
+		t.Fatal("v6-override missing")
+	}
+	if got := len(t1.A); got != 0 {
+		t.Errorf("v6-override len(A) = %d, want 0", got)
+	}
+	want = []interface{}{"2001:db8::101", 100}
+	if got := t1.Aaaa[0].([]interface{}); !reflect.DeepEqual(got, want) {
+		t.Errorf("v6-override Aaaa[0] = %v, want %v", got, want)
+	}
 }
 
-func (s *DnsSuite) TestCname(c *C) {
-	z := s.zone
-
+func TestCname(t *testing.T) {
+	z := newTestZone(t)
 	zd, err := z.BuildZone()
-	c.Assert(err, IsNil)
+	if err != nil {
+		t.Fatalf("BuildZone: %v", err)
+	}
 
 	t1, ok := zd.Data["zone3.example.dk"]
-	c.Assert(ok, Equals, true)
-	c.Check(t1.Cname[0], DeepEquals, []interface{}{"one-override.example.com", 100})
+	if !ok {
+		t.Fatal("zone3.example.dk missing")
+	}
+	want := []interface{}{"one-override.example.com", 100}
+	if got := t1.Cname[0].([]interface{}); !reflect.DeepEqual(got, want) {
+		t.Errorf("zone3.example.dk Cname[0] = %v, want %v", got, want)
+	}
 
 	t1, ok = zd.Data["zone3.example.se"]
-	c.Assert(ok, Equals, true)
-	c.Check(t1.Cname[0], DeepEquals, []interface{}{"two.example.com", 100})
+	if !ok {
+		t.Fatal("zone3.example.se missing")
+	}
+	want = []interface{}{"two.example.com", 100}
+	if got := t1.Cname[0].([]interface{}); !reflect.DeepEqual(got, want) {
+		t.Errorf("zone3.example.se Cname[0] = %v, want %v", got, want)
+	}
 
 	t1, ok = zd.Data["zone3.example.no"]
-	c.Assert(ok, Equals, true)
-	c.Check(t1.Cname[0], DeepEquals, []interface{}{"one-override.example.com", 2})
-	c.Check(t1.Cname[1], DeepEquals, []interface{}{"two.example.com", 1})
+	if !ok {
+		t.Fatal("zone3.example.no missing")
+	}
+	want = []interface{}{"one-override.example.com", 2}
+	if got := t1.Cname[0].([]interface{}); !reflect.DeepEqual(got, want) {
+		t.Errorf("zone3.example.no Cname[0] = %v, want %v", got, want)
+	}
+	want = []interface{}{"two.example.com", 1}
+	if got := t1.Cname[1].([]interface{}); !reflect.DeepEqual(got, want) {
+		t.Errorf("zone3.example.no Cname[1] = %v, want %v", got, want)
+	}
 }
 
-func (s *DnsSuite) TestDnsSort(c *C) {
+func TestDnsSort(t *testing.T) {
 	zd := zoneData{}
 	l := new(zoneLabel)
 	zd["test"] = l
 
-	l.A = make([]interface{}, 4)
-	l.A[0] = []interface{}{"20.2.1.4", 200}
-	l.A[1] = []interface{}{"20.50.1.4", 300}
-	l.A[2] = []interface{}{"1.2.3.4", 190}
-	l.A[3] = []interface{}{"10.2.3.4", 150}
+	l.A = jsonAddresses{
+		[]interface{}{"20.2.1.4", 200},
+		[]interface{}{"20.50.1.4", 300},
+		[]interface{}{"1.2.3.4", 190},
+		[]interface{}{"10.2.3.4", 150},
+	}
 
 	zd.sortRecords()
 
-	c.Check(l.A, DeepEquals, jsonAddresses{[]interface{}{"1.2.3.4", 190}, []interface{}{"10.2.3.4", 150}, []interface{}{"20.2.1.4", 200}, []interface{}{"20.50.1.4", 300}})
+	want := jsonAddresses{
+		[]interface{}{"1.2.3.4", 190},
+		[]interface{}{"10.2.3.4", 150},
+		[]interface{}{"20.2.1.4", 200},
+		[]interface{}{"20.50.1.4", 300},
+	}
+	if !reflect.DeepEqual(l.A, want) {
+		t.Errorf("sorted = %v, want %v", l.A, want)
+	}
 }

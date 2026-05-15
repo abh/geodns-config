@@ -1,35 +1,43 @@
 package dnsconfig
 
 import (
-	"github.com/davecgh/go-spew/spew"
-	. "launchpad.net/gocheck"
+	"reflect"
+	"testing"
 )
 
-type ZonesSuite struct {
-}
-
-var _ = Suite(&ZonesSuite{})
-
-func (s *ZonesSuite) SetUpSuite(c *C) {
-}
-
-func (s *LabelsSuite) TestZonesLoad(c *C) {
+func TestZonesLoad(t *testing.T) {
 	zs := new(Zones)
-	err := zs.LoadZonesConfig("testdata/zones.json")
-	c.Assert(err, IsNil)
+	if err := zs.LoadZonesConfig("testdata/zones.json"); err != nil {
+		t.Fatalf("LoadZonesConfig: %v", err)
+	}
 
 	z, ok := zs.zones["z.example.com"]
-	c.Assert(ok, Equals, true)
-	c.Check(z.Name, Equals, "z.example.com")
-	c.Check(z.Options.Ttl, Equals, 300) // default TTL
+	if !ok {
+		t.Fatal("z.example.com missing")
+	}
+	if z.Name != "z.example.com" {
+		t.Errorf("Name = %q, want %q", z.Name, "z.example.com")
+	}
+	if z.Options.Ttl != 300 {
+		t.Errorf("Ttl = %d, want default 300", z.Options.Ttl)
+	}
 
 	z, ok = zs.zones["x.example.com"]
-	c.Log(spew.Sdump(z))
-	c.Assert(ok, Equals, true)
-	c.Check(z.Name, Equals, "x.example.com")
-	c.Check(z.Options.Ttl, Equals, 120) // Configured TTL
-	c.Check(z.Options.Targeting, Equals, "@ country")
+	if !ok {
+		t.Fatal("x.example.com missing")
+	}
+	if z.Name != "x.example.com" {
+		t.Errorf("Name = %q, want %q", z.Name, "x.example.com")
+	}
+	if z.Options.Ttl != 120 {
+		t.Errorf("Ttl = %d, want 120", z.Options.Ttl)
+	}
+	if z.Options.Targeting != "@ country" {
+		t.Errorf("Targeting = %q, want %q", z.Options.Targeting, "@ country")
+	}
 
-	c.Check(z.Ns, DeepEquals, []string{"ns1.example.com", "ns2.example.com"})
-
+	wantNs := []string{"ns1.example.com", "ns2.example.com"}
+	if !reflect.DeepEqual(z.Ns, wantNs) {
+		t.Errorf("Ns = %v, want %v", z.Ns, wantNs)
+	}
 }

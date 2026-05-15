@@ -1,45 +1,45 @@
 package dnsconfig
 
-import (
-	. "launchpad.net/gocheck"
-)
+import "testing"
 
-type GeoMapSuite struct {
-	GeoMap GeoMap
-}
+func TestGeoMapLoad(t *testing.T) {
+	g := NewGeoMap()
+	if err := g.LoadFile("testdata/geomap.json"); err != nil {
+		t.Fatalf("LoadFile: %v", err)
+	}
 
-var _ = Suite(&GeoMapSuite{})
+	if got := g.geomap["*.ams*"][0].target; got != "fr" {
+		t.Errorf(`geomap["*.ams*"][0].target = %q, want %q`, got, "fr")
+	}
+	if got := g.geomap["*.ams*"][1].target; got != "nl" {
+		t.Errorf(`geomap["*.ams*"][1].target = %q, want %q`, got, "nl")
+	}
+	if got := g.geomap["*.ams*"][2].target; got != "europe" {
+		t.Errorf(`geomap["*.ams*"][2].target = %q, want %q`, got, "europe")
+	}
 
-func (s *GeoMapSuite) SetUpSuite(c *C) {
-	s.GeoMap = NewGeoMap()
-}
+	if got := g.GetNodeGeos("test.sea")[0].target; got != "@" {
+		t.Errorf(`GetNodeGeos("test.sea")[0].target = %q, want "@"`, got)
+	}
 
-func (s *GeoMapSuite) TestGeoMap(c *C) {
-	s.GeoMap.Clear()
-}
+	if got := g.geomap["*.lhr"][1].weight; got != 1000 {
+		t.Errorf(`geomap["*.lhr"][1].weight = %d, want 1000`, got)
+	}
 
-func (s *GeoMapSuite) TestGeoLoad(c *C) {
-	s.GeoMap.Clear()
-	err := s.GeoMap.LoadFile("testdata/geomap.json")
-	c.Assert(err, IsNil)
+	if got := g.GetNodeGeos("flex04.ams04")[0].weight; got != 1 {
+		t.Errorf(`GetNodeGeos("flex04.ams04")[0].weight = %d, want 1`, got)
+	}
+	if got := g.GetNodeGeos("flex04.ams04")[0].target; got != "europe" {
+		t.Errorf(`GetNodeGeos("flex04.ams04")[0].target = %q, want "europe"`, got)
+	}
 
-	// results are sorted appropriately
-	c.Assert(s.GeoMap.geomap["*.ams*"][0].target, Equals, "fr")
-	c.Assert(s.GeoMap.geomap["*.ams*"][1].target, Equals, "nl")
-	c.Assert(s.GeoMap.geomap["*.ams*"][2].target, Equals, "europe")
-
-	// "@" gets sorted first
-	c.Assert(s.GeoMap.GetNodeGeos("test.sea")[0].target, Equals, "@")
-
-	c.Assert(s.GeoMap.geomap["*.lhr"][1].weight, Equals, 1000)
-
-	// make sure we get the more specific entry
-	c.Assert(s.GeoMap.GetNodeGeos("flex04.ams04")[0].weight, Equals, 1)
-	c.Assert(s.GeoMap.GetNodeGeos("flex04.ams04")[0].target, Equals, "europe")
-
-	c.Assert(s.GeoMap.GetNodeGeos("x123.lhr")[1].weight, Equals, 1000)
-	c.Assert(s.GeoMap.GetNodeGeos("x123.lhr")[1].target, Equals, "europe")
-
-	c.Assert(s.GeoMap.GetNodeGeos("x123.lhr")[0].weight, Equals, 100)
-
+	if got := g.GetNodeGeos("x123.lhr")[1].weight; got != 1000 {
+		t.Errorf(`GetNodeGeos("x123.lhr")[1].weight = %d, want 1000`, got)
+	}
+	if got := g.GetNodeGeos("x123.lhr")[1].target; got != "europe" {
+		t.Errorf(`GetNodeGeos("x123.lhr")[1].target = %q, want "europe"`, got)
+	}
+	if got := g.GetNodeGeos("x123.lhr")[0].weight; got != 100 {
+		t.Errorf(`GetNodeGeos("x123.lhr")[0].weight = %d, want 100`, got)
+	}
 }

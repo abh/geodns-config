@@ -2,49 +2,61 @@ package dnsconfig
 
 import (
 	"net/netip"
-
-	. "launchpad.net/gocheck"
+	"testing"
 )
 
-type NodesSuite struct {
-	Nodes Nodes
+func TestNodesBasic(t *testing.T) {
+	nodes := NewNodes()
+	nodes.Set("foo", Node{IP: netip.MustParseAddr("10.0.0.1"), Active: true})
+	if got := nodes.Count(); got != 1 {
+		t.Fatalf("Count = %d, want 1", got)
+	}
+
+	node := nodes.Get("foo")
+	if node == nil {
+		t.Fatal("Get(foo) returned nil")
+	}
+	if node.Name != "foo" {
+		t.Errorf("Name = %q, want %q", node.Name, "foo")
+	}
 }
 
-var _ = Suite(&NodesSuite{})
+func TestNodesLoad(t *testing.T) {
+	nodes := NewNodes()
+	if err := nodes.LoadFile("testdata/nodes-small.json"); err != nil {
+		t.Fatalf("LoadFile: %v", err)
+	}
 
-func (s *NodesSuite) SetUpSuite(c *C) {
-	s.Nodes = NewNodes()
-}
+	node := nodes.Get("edge01.lax")
+	if node == nil {
+		t.Fatal("edge01.lax: nil")
+	}
+	if got := node.IP.String(); got != "108.161.187.3" {
+		t.Errorf("edge01.lax IP = %q, want %q", got, "108.161.187.3")
+	}
+	if !node.Active {
+		t.Error("edge01.lax Active = false, want true")
+	}
 
-func (s *NodesSuite) TestNodes(c *C) {
-	s.Nodes.Clear()
-	s.Nodes.Set("foo", Node{IP: netip.MustParseAddr("10.0.0.1"), Active: true})
-	c.Assert(s.Nodes.Count(), Equals, 1)
+	node = nodes.Get("edge01.sea")
+	if node == nil {
+		t.Fatal("edge01.sea: nil")
+	}
+	if node.Active {
+		t.Error("edge01.sea Active = true, want false")
+	}
 
-	node := s.Nodes.Get("foo")
-	c.Assert(node, NotNil)
-	c.Assert(node.Name, Equals, "foo")
-}
-
-func (s *NodesSuite) TestLoad(c *C) {
-	s.Nodes.Clear()
-	err := s.Nodes.LoadFile("testdata/nodes-small.json")
-	c.Assert(err, IsNil)
-
-	node := s.Nodes.Get("edge01.lax")
-	c.Assert(node, NotNil)
-	c.Assert(node.IP.String(), Equals, "108.161.187.3")
-	c.Assert(node.Active, Equals, true)
-
-	node = s.Nodes.Get("edge01.sea")
-	c.Assert(node, NotNil)
-	c.Assert(node.Active, Equals, false)
-
-	node = s.Nodes.Get("cname-chain")
-	c.Assert(node, NotNil)
-	c.Assert(node.Active, Equals, true)
-	c.Assert(node.Cname, Equals, "hello.example.com")
-
-	// not sure this is the appropriate data, but it's what's implemented so make it explicit
-	c.Check(node.IP.IsValid(), Equals, false)
+	node = nodes.Get("cname-chain")
+	if node == nil {
+		t.Fatal("cname-chain: nil")
+	}
+	if !node.Active {
+		t.Error("cname-chain Active = false, want true")
+	}
+	if node.Cname != "hello.example.com" {
+		t.Errorf("cname-chain Cname = %q, want %q", node.Cname, "hello.example.com")
+	}
+	if node.IP.IsValid() {
+		t.Errorf("cname-chain IP unexpectedly valid: %v", node.IP)
+	}
 }
