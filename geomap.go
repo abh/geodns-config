@@ -9,11 +9,13 @@ import (
 
 type geoTargetList []*GeoTarget
 
-type geoTargetMap map[string]geoTargetList
-type GeoMap struct {
-	geomap geoTargetMap
-	mutex  sync.Mutex
-}
+type (
+	geoTargetMap map[string]geoTargetList
+	GeoMap       struct {
+		geomap geoTargetMap
+		mutex  sync.Mutex
+	}
+)
 
 type GeoTarget struct {
 	target string
@@ -45,7 +47,6 @@ func (gm *GeoMap) Clear() {
 }
 
 func (gm *GeoMap) GetNodeGeos(node string) []*GeoTarget {
-
 	gm.mutex.Lock()
 	defer gm.mutex.Unlock()
 
@@ -53,10 +54,23 @@ func (gm *GeoMap) GetNodeGeos(node string) []*GeoTarget {
 		return geo
 	}
 
-	for k, geos := range gm.geomap {
+	// Map iteration is unordered, so collect candidates and sort them
+	// for deterministic results when multiple wildcards match.
+	// Longer patterns (more literal characters) win; alphabetical as tiebreak.
+	var matches []string
+	for k := range gm.geomap {
 		if matchWildcard(k, node) {
-			return geos
+			matches = append(matches, k)
 		}
+	}
+	if len(matches) > 0 {
+		sort.Slice(matches, func(i, j int) bool {
+			if len(matches[i]) != len(matches[j]) {
+				return len(matches[i]) > len(matches[j])
+			}
+			return matches[i] < matches[j]
+		})
+		return gm.geomap[matches[0]]
 	}
 
 	if geo, ok := gm.geomap["default"]; ok {
@@ -67,7 +81,6 @@ func (gm *GeoMap) GetNodeGeos(node string) []*GeoTarget {
 }
 
 func (gm *GeoMap) LoadFile(fileName string) error {
-
 	objmap := make(map[string]interface{})
 
 	return jsonLoader(fileName, objmap, func() error {
@@ -77,8 +90,6 @@ func (gm *GeoMap) LoadFile(fileName string) error {
 		geomap := geoTargetMap{}
 
 		for name, v := range objmap {
-			// log.Printf("%s: %#v\n", name, v)
-
 			if _, ok := geomap[name]; !ok {
 				geomap[name] = make([]*GeoTarget, 0)
 			}
@@ -86,27 +97,20 @@ func (gm *GeoMap) LoadFile(fileName string) error {
 			for _, g := range v.([]interface{}) {
 				gSplit := strings.Split(g.(string), "=")
 
-				// log.Printf("gSplit: %#v\n", gSplit)
-
 				weight := 100
-
 				if len(gSplit) > 1 {
 					var err error
 					weight, err = toInt(gSplit[1])
 					if err != nil {
-						return fmt.Errorf("Bad weight '%s' for geo '%s'/'%s': %s\n", gSplit[1], name, gSplit[0], err)
+						return fmt.Errorf("bad weight '%s' for geo '%s'/'%s': %w", gSplit[1], name, gSplit[0], err)
 					}
 				}
 
 				geo := GeoTarget{target: gSplit[0], weight: weight}
 				geomap[name] = append(geomap[name], &geo)
-
 			}
 
 			geomap[name].Sort()
-
-			// log.Printf("%s: %#v", name, geomap)
-
 		}
 
 		gm.geomap = geomap

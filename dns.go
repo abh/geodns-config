@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"slices"
 	"sort"
 )
 
@@ -69,8 +70,6 @@ func (jd *zoneData) sortRecords() {
 }
 
 func (z *Zone) BuildZone() (*zoneJson, error) {
-	// log.Println("BuildZone", spew.Sdump(z))
-
 	js := zoneJson{Data: zoneData{}}
 
 	js.MaxHosts = z.Options.MaxHosts
@@ -95,7 +94,7 @@ func (z *Zone) BuildZone() (*zoneJson, error) {
 		}
 		for _, labelNode := range labelData.GetNodes() {
 
-			if labelNode.Active == false {
+			if !labelNode.Active {
 				log.Printf("Node '%s' is inactive in label '%s'\n", labelNode.Name, labelData.Name)
 				continue
 			}
@@ -109,21 +108,20 @@ func (z *Zone) BuildZone() (*zoneJson, error) {
 			geos := z.GeoMap.GetNodeGeos(labelNode.Name)
 
 			// Don't warn if there are no targets for the inactive node
-			if node.Active == false && len(geos) > 0 {
+			if !node.Active && len(geos) > 0 {
 				log.Printf("Node '%s' is inactive (used in '%s')\n", labelNode.Name, labelData.Name)
 				continue
 			}
 
 			for _, geo := range geos {
 				var geoName string
-				if geo.target == "@" {
+				switch {
+				case geo.target == "@":
 					geoName = labelData.Name
-				} else {
-					if len(labelData.Name) > 0 {
-						geoName = labelData.Name + "." + geo.target
-					} else {
-						geoName = geo.target
-					}
+				case len(labelData.Name) > 0:
+					geoName = labelData.Name + "." + geo.target
+				default:
+					geoName = geo.target
 				}
 				if _, ok := js.Data[geoName]; !ok {
 					js.Data[geoName] = new(zoneLabel)
@@ -150,25 +148,18 @@ func (z *Zone) BuildZone() (*zoneJson, error) {
 					}
 				}
 
-				fn := func(slice []string, s string) []string {
-					for _, e := range slice {
-						if e == s {
-							return slice
-						}
-					}
-					return append(slice, s)
+				if z.Verbose && !slices.Contains(displayQueue, geoName) {
+					displayQueue = append(displayQueue, geoName)
 				}
-				displayQueue = fn(displayQueue, geoName)
 			}
 		}
-		if d, ok := js.Data[labelData.Name]; ok {
-			if len(d.A) == 0 && len(d.Aaaa) == 0 && len(d.Cname) == 0 {
-				log.Println("No global data for", labelData.Name)
-			}
-		} else {
+		d, ok := js.Data[labelData.Name]
+		if !ok || (len(d.A) == 0 && len(d.Aaaa) == 0 && len(d.Cname) == 0) {
 			log.Println("No global data for", labelData.Name)
 		}
-		displayQueue = append(displayQueue, "")
+		if z.Verbose {
+			displayQueue = append(displayQueue, "")
+		}
 	}
 
 	js.Data.sortRecords()
@@ -184,8 +175,7 @@ func (z *Zone) BuildZone() (*zoneJson, error) {
 			if len(js.Data[geoName].Cname) > 0 {
 				fmt.Printf("%s\n", js.Data[geoName].Cname)
 			} else {
-				addrs := append(jsonAddresses{}, js.Data[geoName].A...)
-				addrs = append(addrs, js.Data[geoName].Aaaa...)
+				addrs := slices.Concat(js.Data[geoName].A, js.Data[geoName].Aaaa)
 				for i, a := range addrs {
 					fmt.Printf("%-39s/%-4d", a.([]interface{})[0].(string), a.([]interface{})[1].(int))
 					if i == len(addrs)-1 {

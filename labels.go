@@ -135,8 +135,6 @@ func (ls *Labels) LoadFile(fileName string) error {
 					continue
 				}
 
-				// fmt.Printf("labelName '%s', labelTarget '%#v'\n", labelName, labelTarget)
-
 				node := labelNode{Name: labelName, Active: true}
 
 				var ipStr string

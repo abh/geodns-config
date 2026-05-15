@@ -61,11 +61,9 @@ func (zs *Zones) All() (r []*Zone) {
 }
 
 func (zs *Zones) LoadZonesConfig(fileName string) error {
-
 	objmap := objMap{}
 
 	return jsonLoader(fileName, objmap, func() error {
-
 		zs.mutex.Lock()
 		defer zs.mutex.Unlock()
 

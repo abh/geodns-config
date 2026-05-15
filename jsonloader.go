@@ -3,7 +3,7 @@ package dnsconfig
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	"io"
 	"os"
 	"strconv"
 
@@ -17,13 +17,14 @@ func jsonLoader(fileName string, objmap objMap, fn func() error) error {
 	if err != nil {
 		return err
 	}
+	defer fh.Close()
 
 	decoder := json.NewDecoder(fh)
 	if err = decoder.Decode(&objmap); err != nil {
 		extra := ""
 		if serr, ok := err.(*json.SyntaxError); ok {
-			if _, serr := fh.Seek(0, os.SEEK_SET); serr != nil {
-				log.Fatalf("seek error: %v", serr)
+			if _, seekErr := fh.Seek(0, io.SeekStart); seekErr != nil {
+				return fmt.Errorf("seek error in %s: %w", fh.Name(), seekErr)
 			}
 			line, col, highlight := errorutil.HighlightBytePosition(fh, serr.Offset)
 			extra = fmt.Sprintf(":\nError at line %d, column %d (file offset %d):\n%s",
@@ -33,8 +34,7 @@ func jsonLoader(fileName string, objmap objMap, fn func() error) error {
 			fh.Name(), extra, err)
 	}
 
-	err = fn()
-	return err
+	return fn()
 }
 
 func toInt(i interface{}) (int, error) {

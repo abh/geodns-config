@@ -2,7 +2,6 @@ package dnsconfig
 
 import (
 	"fmt"
-	"log"
 	"net/netip"
 	"sync"
 )
@@ -31,11 +30,9 @@ func (ns *Nodes) All() (r []*Node) {
 	ns.mutex.Lock()
 	defer ns.mutex.Unlock()
 
-	for i, node := range ns.nodes {
-		log.Println(i, node)
+	for _, node := range ns.nodes {
 		r = append(r, node)
 	}
-	log.Println("Rs", r)
 	return
 }
 
@@ -77,7 +74,6 @@ func (ns *Nodes) LoadFile(fileName string) error {
 		nodes := nodesMap{}
 		for name, v := range objmap {
 			data := v.(map[string]interface{})
-			// log.Println("name, data", name, data)
 
 			active, err := toBool(data["active"])
 			if err != nil {
@@ -90,20 +86,14 @@ func (ns *Nodes) LoadFile(fileName string) error {
 			if cnameIf, ok := data["cname"]; ok {
 				cname = cnameIf.(string)
 			} else {
-
 				ipStr := data["ip"].(string)
-
 				ip, err = netip.ParseAddr(ipStr)
 				if err != nil {
-					return fmt.Errorf("Invalid IP address %s for node '%s': %w", ipStr, name, err)
+					return fmt.Errorf("invalid IP address %s for node '%s': %w", ipStr, name, err)
 				}
 			}
 
-			node := &Node{Cname: cname, IP: ip, Active: active}
-
-			nodes[name] = node
-			// log.Printf("%#v\n", node)
-
+			nodes[name] = &Node{Cname: cname, IP: ip, Active: active}
 		}
 
 		ns.nodes = nodes
