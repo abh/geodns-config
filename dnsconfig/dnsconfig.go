@@ -1,11 +1,7 @@
 package main
 
 import (
-	"github.com/ant0ine/go-json-rest"
-	"github.com/abh/geodns-config"
-	"github.com/gorilla/handlers"
-	"github.com/gorilla/mux"
-
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -13,6 +9,10 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/abh/geodns-config"
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
 )
 
 var VERSION string = "2.2.1"
@@ -102,31 +102,21 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(templateFile)
 }
 
-func RestTest(w *rest.ResponseWriter, _ *rest.Request) {
-	w.WriteJson(map[string]int{"foo": 123, "bar": 456})
+func RestTest(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(map[string]int{"foo": 123, "bar": 456}); err != nil {
+		log.Printf("encoding response: %s", err)
+	}
 }
 
 func setupDaemon(port int) {
 
 	router := mux.NewRouter()
 	router.HandleFunc("/", HomeHandler)
-	http.Handle("/", router)
-	http.Handle("/static/", http.FileServer(http.Dir(".")))
+	router.HandleFunc("/api/test", RestTest).Methods("GET")
+	router.PathPrefix("/static/").Handler(http.FileServer(http.Dir(".")))
 
-	restHandler := rest.ResourceHandler{}
-
-	restHandler.SetRoutes(
-		rest.Route{"GET", "/api/test", RestTest},
-	)
-
-	restHandler.EnableGzip = true
-	restHandler.EnableLogAsJson = true
-	restHandler.EnableResponseStackTrace = true
-	restHandler.EnableStatusService = true
-
-	http.Handle("/api/", &restHandler)
-
-	err := http.ListenAndServe(fmt.Sprintf(":%d", port), handlers.CombinedLoggingHandler(os.Stdout, http.DefaultServeMux))
+	err := http.ListenAndServe(fmt.Sprintf(":%d", port), handlers.CombinedLoggingHandler(os.Stdout, router))
 
 	if err != nil {
 		log.Fatalln(err)
