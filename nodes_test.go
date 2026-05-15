@@ -1,8 +1,9 @@
 package dnsconfig
 
 import (
+	"net/netip"
+
 	. "launchpad.net/gocheck"
-	"net"
 )
 
 type NodesSuite struct {
@@ -17,7 +18,7 @@ func (s *NodesSuite) SetUpSuite(c *C) {
 
 func (s *NodesSuite) TestNodes(c *C) {
 	s.Nodes.Clear()
-	s.Nodes.Set("foo", Node{Ip: net.ParseIP("10.0.0.1"), Active: true})
+	s.Nodes.Set("foo", Node{IP: netip.MustParseAddr("10.0.0.1"), Active: true})
 	c.Assert(s.Nodes.Count(), Equals, 1)
 
 	node := s.Nodes.Get("foo")
@@ -32,7 +33,7 @@ func (s *NodesSuite) TestLoad(c *C) {
 
 	node := s.Nodes.Get("edge01.lax")
 	c.Assert(node, NotNil)
-	c.Assert(node.Ip.String(), Equals, "108.161.187.3")
+	c.Assert(node.IP.String(), Equals, "108.161.187.3")
 	c.Assert(node.Active, Equals, true)
 
 	node = s.Nodes.Get("edge01.sea")
@@ -45,6 +46,5 @@ func (s *NodesSuite) TestLoad(c *C) {
 	c.Assert(node.Cname, Equals, "hello.example.com")
 
 	// not sure this is the appropriate data, but it's what's implemented so make it explicit
-	c.Check(node.Ip, IsNil)
-
+	c.Check(node.IP.IsValid(), Equals, false)
 }

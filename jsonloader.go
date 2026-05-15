@@ -3,10 +3,11 @@ package dnsconfig
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/abh/errorutil"
 	"log"
 	"os"
 	"strconv"
+
+	"github.com/abh/errorutil"
 )
 
 type objMap map[string]interface{}
@@ -34,7 +35,6 @@ func jsonLoader(fileName string, objmap objMap, fn func() error) error {
 
 	err = fn()
 	return err
-
 }
 
 func toInt(i interface{}) (int, error) {
@@ -50,12 +50,12 @@ func toInt(i interface{}) (int, error) {
 }
 
 func toBool(i interface{}) (bool, error) {
+	if b, ok := i.(bool); ok {
+		return b, nil
+	}
 	n, err := toInt(i)
 	if err != nil {
 		return false, err
 	}
-	if n > 0 {
-		return true, nil
-	}
-	return false, nil
+	return n > 0, nil
 }

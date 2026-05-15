@@ -3,7 +3,7 @@ package dnsconfig
 import (
 	"fmt"
 	"log"
-	"net"
+	"net/netip"
 	"sync"
 )
 
@@ -16,7 +16,7 @@ type Nodes struct {
 
 type Node struct {
 	Name   string
-	Ip     net.IP
+	IP     netip.Addr
 	Cname  string
 	Active bool
 }
@@ -28,7 +28,6 @@ func NewNodes() Nodes {
 }
 
 func (ns *Nodes) All() (r []*Node) {
-
 	ns.mutex.Lock()
 	defer ns.mutex.Unlock()
 
@@ -69,14 +68,13 @@ func (ns *Nodes) Count() int {
 }
 
 func (ns *Nodes) LoadFile(fileName string) error {
-
 	objmap := make(objMap)
 
 	return jsonLoader(fileName, objmap, func() error {
 		ns.mutex.Lock()
 		defer ns.mutex.Unlock()
 
-		var nodes = nodesMap{}
+		nodes := nodesMap{}
 		for name, v := range objmap {
 			data := v.(map[string]interface{})
 			// log.Println("name, data", name, data)
@@ -87,7 +85,7 @@ func (ns *Nodes) LoadFile(fileName string) error {
 			}
 
 			var cname string
-			var ip net.IP
+			var ip netip.Addr
 
 			if cnameIf, ok := data["cname"]; ok {
 				cname = cnameIf.(string)
@@ -95,13 +93,13 @@ func (ns *Nodes) LoadFile(fileName string) error {
 
 				ipStr := data["ip"].(string)
 
-				ip = net.ParseIP(ipStr)
-				if ip == nil {
-					return fmt.Errorf("Invalid IP address %s for node '%s'", ipStr, name)
+				ip, err = netip.ParseAddr(ipStr)
+				if err != nil {
+					return fmt.Errorf("Invalid IP address %s for node '%s': %w", ipStr, name, err)
 				}
 			}
 
-			node := &Node{Cname: cname, Ip: ip, Active: active}
+			node := &Node{Cname: cname, IP: ip, Active: active}
 
 			nodes[name] = node
 			// log.Printf("%#v\n", node)

@@ -2,7 +2,7 @@ package dnsconfig
 
 import (
 	"fmt"
-	"net"
+	"net/netip"
 	"sync"
 )
 
@@ -17,7 +17,7 @@ type Labels struct {
 type labelNode struct {
 	Name   string
 	Active bool
-	IP     net.IP
+	IP     netip.Addr
 	Cname  string
 }
 
@@ -59,7 +59,6 @@ func NewLabels() Labels {
 
 // All returns a slice of the labels
 func (ls *Labels) All() (r []*Label) {
-
 	ls.mutex.Lock()
 	defer ls.mutex.Unlock()
 
@@ -99,7 +98,6 @@ func (ls *Labels) SetNode(name string, node labelNode) {
 	}
 
 	label.labelNodes[node.Name] = node
-
 }
 
 // Get returns a named label
@@ -122,11 +120,10 @@ func (ls *Labels) Count() int {
 // LoadFile loads a labels.json file into the data structure. It is not currently
 // cleared first.
 func (ls *Labels) LoadFile(fileName string) error {
-
 	objmap := make(objMap)
 
 	return jsonLoader(fileName, objmap, func() error {
-		var newLabels = NewLabels()
+		newLabels := NewLabels()
 
 		for name, v := range objmap {
 			data := v.(map[string]interface{})
@@ -157,10 +154,10 @@ func (ls *Labels) LoadFile(fileName string) error {
 					}
 					if activeV, ok := v["active"]; ok {
 						active, err := toBool(activeV)
-						node.Active = active
 						if err != nil {
-							fmt.Errorf("Invalid active flag for '%s'/'%s': %s", name, labelName, active)
+							return fmt.Errorf("Invalid active flag for '%s'/'%s': %w", name, labelName, err)
 						}
+						node.Active = active
 					}
 
 				default:
@@ -168,9 +165,9 @@ func (ls *Labels) LoadFile(fileName string) error {
 				}
 
 				if len(ipStr) > 0 {
-					ip := net.ParseIP(ipStr)
-					if ip == nil {
-						return fmt.Errorf("Invalid IP address for '%s'/'%s': %s", name, labelName, ipStr)
+					ip, err := netip.ParseAddr(ipStr)
+					if err != nil {
+						return fmt.Errorf("Invalid IP address for '%s'/'%s': %s: %w", name, labelName, ipStr, err)
 					}
 					node.IP = ip
 				}

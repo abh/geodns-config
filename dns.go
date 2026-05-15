@@ -136,8 +136,8 @@ func (z *Zone) BuildZone() (*zoneJson, error) {
 					js.Data[geoName].Cname = append(js.Data[geoName].Cname, trg)
 				} else {
 					ip := labelNode.IP
-					if ip == nil {
-						ip = node.Ip
+					if !ip.IsValid() {
+						ip = node.IP
 					}
 
 					trg := []interface{}{ip.String(), geo.weight}
@@ -178,7 +178,6 @@ func (z *Zone) BuildZone() (*zoneJson, error) {
 			if len(js.Data[geoName].Cname) > 0 {
 				fmt.Printf("%s\n", js.Data[geoName].Cname)
 			} else {
-
 				for i, a := range js.Data[geoName].A {
 					// fmt.Printf("%#v\n%s\n", a, spew.Sdump(a))
 					fmt.Printf("%-15s/%-4d", a.([]interface{})[0].(string), a.([]interface{})[1].(int))
