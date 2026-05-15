@@ -64,6 +64,7 @@ func (jd *zoneData) sortRecords() {
 	for _, v := range *jd {
 		sort.Sort(v.A)
 		sort.Sort(v.Aaaa)
+		sort.Sort(v.Cname)
 	}
 }
 
